@@ -18,4 +18,16 @@ public interface IMMehrspindelmaschine {
         AN, AUS;
     }
 
+    boolean setStatusMehrspindelmaschineHub(Hub neuerStatus);
+    Hub getStatusHub();
+
+    boolean setStatusRevolverdrehung(Revolverdrehung neuerStatus);
+    Revolverdrehung getStatusRevolverdrehung();
+
+    boolean setStatusMehrspindelmaschineWerkzeugAntrieb(WerkzeugAntrieb neuerStatus);
+    WerkzeugAntrieb getStatusWerkzeugAntrieb();
+
+    boolean setStatusMehrspindelmaschineBand(Band neuerStatus);
+    Band getStatusBand();
+
 }

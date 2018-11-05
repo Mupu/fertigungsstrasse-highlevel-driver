@@ -2,8 +2,14 @@ package me.mupu.interfaces;
 
 public interface IMSchieber {
 
-    enum Einlegestation {
-        VOR, RUECK, AUS;
+    enum Q_EinlegestationS {
+        VOR, RUECK, AUS
     }
+
+    void setStatusEinlegestationS(Q_EinlegestationS neuerStatus);
+
+    boolean istBelegtS();
+    boolean istInAusgangslageS();
+    boolean istBandpositionS();
 
 }

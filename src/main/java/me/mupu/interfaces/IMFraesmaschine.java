@@ -18,4 +18,16 @@ public interface IMFraesmaschine {
         AN, AUS;
     }
 
+    void setStatusFraesmaschineHub(Hub neuerStatus);
+    Hub getStatusHub();
+
+    void setStatusQuerschlitten(Querschlitten neuerStatus);
+    Querschlitten getStatusQuerschlitten();
+
+    void setStatusFraesmaschineWerkzeugAntrieb(WerkzeugAntrieb neuerStatus);
+    WerkzeugAntrieb getStatusWerkzeugAntrieb();
+
+    void setStatusFraesmaschineBand(Band neuerStatus);
+    Band getStatusBand();
+
 }
