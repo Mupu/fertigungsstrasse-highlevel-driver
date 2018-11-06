@@ -1,4 +1,4 @@
-package me.mupu.interfaces;
+package me.mupu.interfaces.maschinen;
 
 public interface IMSchieber {
 

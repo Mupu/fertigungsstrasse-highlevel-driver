@@ -4,8 +4,8 @@ import me.mupu.FertigungsstrasseHLD;
 import me.mupu._testUsbInterface.UsbOptoRel32;
 import org.junit.jupiter.api.*;
 
-import me.mupu.interfaces.IMSchieber;
-import me.mupu.interfaces.IMSchieber.*;
+import me.mupu.interfaces.maschinen.IMSchieber;
+import me.mupu.interfaces.maschinen.IMSchieber.*;
 import static me.mupu.interfaces.bitpos.IInput.*;
 import static me.mupu.interfaces.bitpos.IOutput.*;
 import static org.junit.jupiter.api.Assertions.*;

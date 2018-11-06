@@ -1,4 +1,4 @@
-package me.mupu.interfaces;
+package me.mupu.interfaces.maschinen;
 
 public interface IMBohrmaschine {
 
@@ -26,6 +26,6 @@ public interface IMBohrmaschine {
     void setStatusBandBm(BandBm neuerStatus);
 
     boolean istBandstartBm();
-    boolean InitiatorBm();
+    boolean initiatorBm();
 
 }

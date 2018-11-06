@@ -7,8 +7,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 
-import me.mupu.interfaces.IKran;
-import me.mupu.interfaces.IKran.*;
+import me.mupu.interfaces.maschinen.IKran;
+import me.mupu.interfaces.maschinen.IKran.*;
 
 import static me.mupu.interfaces.bitpos.IInput.*;
 import static me.mupu.interfaces.bitpos.IOutput.*;

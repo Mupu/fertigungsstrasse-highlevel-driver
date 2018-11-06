@@ -1,4 +1,4 @@
-package me.mupu.interfaces;
+package me.mupu.interfaces.maschinen;
 
 public interface IMFraesmaschine {
 
@@ -6,7 +6,7 @@ public interface IMFraesmaschine {
         AUF, AB, AUS
     }
 
-    enum QuerschlittenF {
+    enum Q_QuerschlittenF {
         RUECK, VOR, AUS
     }
 
@@ -22,17 +22,19 @@ public interface IMFraesmaschine {
         OBEN, UNTEN, DAZWISCHEN
     }
 
+    enum I_QuerschlittenF {
+        BANDPOSITION, STAENDERPOSITION, DAZWISCHEN
+    }
+
     void setStatusHubF(Q_HubF neuerStatus);
     I_HubF getStatusHubF();
 
-    void setStatusQuerschlittenF(QuerschlittenF neuerStatus);
+    void setStatusQuerschlittenF(Q_QuerschlittenF neuerStatus);
+    I_QuerschlittenF getStatusQuerschlittenF();
 
     void setStatusWerkzeugAntriebF(WerkzeugAntriebF neuerStatus);
 
     void setStatusBandF(BandF neuerStatus);
-    boolean istBandpositionF();
-
-    boolean istStaenderpositionF();
 
     boolean initiatorF();
 }

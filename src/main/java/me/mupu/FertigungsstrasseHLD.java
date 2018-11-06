@@ -2,7 +2,7 @@ package me.mupu;
 
 //import quancom.UsbOptoRel32; // RELEASE
 import me.mupu._testUsbInterface.UsbOptoRel32; // DEBUG
-import me.mupu.interfaces.*;
+import me.mupu.interfaces.maschinen.*;
 
 import java.io.IOException;
 
@@ -348,7 +348,7 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
     }
 
     @Override
-    public boolean InitiatorBm() {
+    public boolean initiatorBm() {
         return (read() & I_25) == 0;
     }
 
@@ -389,20 +389,34 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
     }
 
     @Override
-    public void setStatusQuerschlittenF(QuerschlittenF neuerStatus) {
-        if (neuerStatus == QuerschlittenF.AUS) {
+    public void setStatusQuerschlittenF(Q_QuerschlittenF neuerStatus) {
+        if (neuerStatus == Q_QuerschlittenF.AUS) {
             resetOutputBit(Q_12 | Q_13);
 
-        } else if (neuerStatus == QuerschlittenF.VOR) {
+        } else if (neuerStatus == Q_QuerschlittenF.VOR) {
             resetOutputBit(Q_12);
             setOutputBit(Q_13);
 
-        } else if (neuerStatus == QuerschlittenF.RUECK) {
+        } else if (neuerStatus == Q_QuerschlittenF.RUECK) {
             resetOutputBit(Q_13);
             setOutputBit(Q_12);
 
         }
         write();
+    }
+    // todo alle read() in locale variable speichern
+    @Override
+    public I_QuerschlittenF getStatusQuerschlittenF() {
+        if ((read() & (I_11 | I_12)) == (I_11 | I_12))
+            return I_QuerschlittenF.DAZWISCHEN;
+        else if ((read() & I_11) == 0)
+            return I_QuerschlittenF.BANDPOSITION;
+        else if ((read() & I_12) == 0)
+            return I_QuerschlittenF.STAENDERPOSITION;
+        else {
+            setStatusQuerschlittenF(Q_QuerschlittenF.AUS);
+            throw new RuntimeException("Illegale Bits");
+        }
     }
 
     @Override
@@ -423,16 +437,6 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
         else if (neuerStatus == BandF.AUS)
             resetOutputBit(Q_17);
         write();
-    }
-
-    @Override
-    public boolean istBandpositionF() {
-        return (read() & I_11) == 0;
-    }
-
-    @Override
-    public boolean istStaenderpositionF() {
-        return (read() & I_12) == 0;
     }
 
     @Override
