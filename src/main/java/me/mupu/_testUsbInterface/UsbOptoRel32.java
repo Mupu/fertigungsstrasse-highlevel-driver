@@ -15,11 +15,9 @@ public class UsbOptoRel32 {
     }
 
     public void setIn(int in) {
-        System.out.println("set: " + Integer.toBinaryString(~in) + "\n");
         this.in = ~in;
     }
 
     public void digitalOut(int data) throws IOException {
-        System.out.println("out: " + Integer.toBinaryString(data));
     }
 }

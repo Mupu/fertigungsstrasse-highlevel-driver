@@ -51,7 +51,7 @@ public interface IKran {
     I_EinlegestationK istEinlegestationBelegtK();
     I_AusschleussbahnK istAusschleussbahnBelegtK();
 
-    boolean InitiatorXAchseK();
-    boolean InitiatorYAchseK();
-    boolean InitiatorZAchseK();
+    boolean initiatorXAchseK();
+    boolean initiatorYAchseK();
+    boolean initiatorZAchseK();
 }

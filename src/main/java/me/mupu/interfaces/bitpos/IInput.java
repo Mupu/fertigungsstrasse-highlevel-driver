@@ -76,32 +76,32 @@ public interface IInput {
     // I_15 u. I_16 nicht belegt
 
     /**
-     * ET Xa
+     * ET Xa (RECHTS)
      */
     int I_17 = 1<<16;
 
     /**
-     * ET Xe
+     * ET Xe (LINKS)
      */
     int I_18 = 1<<17;
 
     /**
-     * ET Ya
+     * ET Ya (VORNE)
      */
     int I_19 = 1<<18;
 
     /**
-     * ET Ye
+     * ET Ye (HINTEN)
      */
     int I_20 = 1<<19;
 
     /**
-     * ET Za
+     * ET Za (OBEN)
      */
     int I_21 = 1<<20;
 
     /**
-     * ET Ze
+     * ET Ze (UNTEN)
      */
     int I_22 = 1<<21;
 

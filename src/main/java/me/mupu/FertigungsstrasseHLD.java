@@ -1,8 +1,8 @@
 package me.mupu;
 
-import me.mupu._testUsbInterface.UsbOptoRel32;
+//import quancom.UsbOptoRel32; // RELEASE
+import me.mupu._testUsbInterface.UsbOptoRel32; // DEBUG
 import me.mupu.interfaces.*;
-//import quancom.UsbOptoRel32;
 
 import java.io.IOException;
 
@@ -11,9 +11,15 @@ import static me.mupu.interfaces.bitpos.IInput.*;
 
 public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBohrmaschine, IMFraesmaschine, IMSchieber {
 
+    // DEBUG
     public static FertigungsstrasseHLD instance;
     public final UsbOptoRel32 usbInterface;
     public int output = 0;
+
+    // RELEASE
+//    private static FertigungsstrasseHLD instance;
+//    private final UsbOptoRel32 usbInterface;
+//    private int output = 0;
 
     /**
      * Oeffnet USB-Interface. Wirft ggf. fehler.
@@ -64,7 +70,7 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
      * Setzt die Bits.
      */
     private void setOutputBit(int mask) {
-        this.output &= ~mask;
+        this.output |= mask;
     }
 
 
@@ -72,7 +78,7 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
      * Setzt die Bits zurueck.
      */
     private void resetOutputBit(int mask) {
-        this.output |= mask;
+        this.output &= ~mask;
     }
 
 
@@ -103,7 +109,10 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
         }
     }
 
-
+    // todo add synchronized to every set method
+    // todo bei set noch inputs checken (runtimeexceptions werfen und maschine ausschalten)
+    // todo warning ausgeben wenn zb: magnet an ist und er nochmals angemacht werden soll
+    // todo eventuell error bei falschen I_.. zb: I_21 | I_22 nur als warnung machen <- zimmer fragen
     /************************
      *  IMSchieber
      ************************/
@@ -144,19 +153,18 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
      *  IKran
      ************************/
     @Override
-    public void setStatusMotorXAchseK(Q_XAchseK neuerStatus) {
-        switch (neuerStatus) {
-            case AUS:
-                resetOutputBit(Q_18 | Q_19);
-                break;
-            case LINKS:
-                resetOutputBit(Q_18);
-                setOutputBit(Q_19);
-                break;
-            case RECHTS:
-                resetOutputBit(Q_19);
-                setOutputBit(Q_18);
-                break;
+    public synchronized void setStatusMotorXAchseK(Q_XAchseK neuerStatus) {
+        if (neuerStatus == Q_XAchseK.AUS) {
+            resetOutputBit(Q_18 | Q_19);
+
+        } else if (neuerStatus == Q_XAchseK.LINKS) {
+            resetOutputBit(Q_18);
+            setOutputBit(Q_19);
+
+        } else if (neuerStatus == Q_XAchseK.RECHTS) {
+            resetOutputBit(Q_19);
+            setOutputBit(Q_18);
+
         }
         write();
     }
@@ -260,17 +268,17 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
     }
 
     @Override
-    public boolean InitiatorXAchseK() {
+    public boolean initiatorXAchseK() {
         return (read() & I_28) == 0;
     }
 
     @Override
-    public boolean InitiatorYAchseK() {
+    public boolean initiatorYAchseK() {
         return (read() & I_29) == 0;
     }
 
     @Override
-    public boolean InitiatorZAchseK() {
+    public boolean initiatorZAchseK() {
         return (read() & I_30) == 0;
     }
 
