@@ -28,10 +28,6 @@ class MehrspindelmaschineTests {
 
         usb = FertigungsstrasseHLD.instance.usbInterface;
 
-        System.out.println("******************" +
-                "\n* SCHIEBER-TESTS *" +
-                "\n******************"
-        );
     }
 
     @BeforeEach

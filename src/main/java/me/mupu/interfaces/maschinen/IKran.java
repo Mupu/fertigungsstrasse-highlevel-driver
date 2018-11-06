@@ -1,57 +1,50 @@
 package me.mupu.interfaces.maschinen;
 
+import me.mupu.enums.motorbewegungen.EMotorbewegungYAchse;
+import me.mupu.enums.motorbewegungen.EMotorbewegungZAchse;
+import me.mupu.enums.motorbewegungen.EMotorbewegungXAchse;
+import me.mupu.enums.motorbewegungen.EMotorstatus;
+import me.mupu.enums.sensoren.ESensorXAchse;
+import me.mupu.enums.sensoren.ESensorYAchse;
+import me.mupu.enums.sensoren.ESensorZAchse;
+import me.mupu.enums.sensoren.ESensorstatus;
+
 public interface IKran {
 
-    enum Q_XAchseK {
-        LINKS, RECHTS, AUS
-    }
-    enum Q_YAchseK {
-        VOR, ZURUECK, AUS
-    }
+    void setMotorstatusXAchseK(EMotorbewegungXAchse neuerStatus);
 
-    enum Q_ZAchseK {
-        HOCH, RUNTER, AUS
-    }
+    void setMotorstatusYAchseK(EMotorbewegungYAchse neuerStatus);
 
-    enum Q_MagnetK {
-        AN, AUS
-    }
+    void setMotorstatusZAchseK(EMotorbewegungZAchse neuerStatus);
 
-    enum I_EinlegestationK {
-        BELEGT, NICHT_BELEGT
-    }
+    void setMotorstatusMagnetK(EMotorstatus neuerStatus);
 
-    enum I_AusschleussbahnK {
-        BELEGT, NICHT_BELEGT
-    }
 
-    enum I_XAchseK {
-        RECHTS, LINKS, DAZWISCHEN
-    }
+    /**
+     * (I_17) ET Xa (RECHTS).
+     * (I_18) ET Xe (LINKS).
+     */
+    ESensorXAchse getPositionXAchseK();
 
-    enum I_YAchseK {
-        VORNE, HINTEN, DAZWISCHEN
-    }
 
-    enum I_ZAchseK {
-        OBEN, UNTEN, DAZWISCHEN
-    }
+    /**
+     * (I_19) ET Ya (VORNE).
+     * (I_20) ET Ye (HINTEN).
+     */
+    ESensorYAchse getPositionYAchseK();
 
-    void setStatusMotorXAchseK(Q_XAchseK neuerStatus);
-    I_XAchseK getStatusMotorXAchseK();
 
-    void setStatusMotorYAchseK(Q_YAchseK neuerStatus);
-    I_YAchseK getStatusMotorYAchseK();
+    /**
+     * (I_21) ET Za (OBEN).
+     * (I_22) ET Ze (UNTEN).
+     */
+    ESensorZAchse getPositionZAchseK();
 
-    void setStatusMotorZAchseK(Q_ZAchseK neuerStatus);
-    I_ZAchseK getStatusMotorZAchseK();
 
-    void setStatusMagnetK(Q_MagnetK neuerStatus);
+    ESensorstatus istEinlegestationBelegtK();
+    ESensorstatus istAusschleussbahnBelegtK();
 
-    I_EinlegestationK istEinlegestationBelegtK();
-    I_AusschleussbahnK istAusschleussbahnBelegtK();
-
-    boolean initiatorXAchseK();
-    boolean initiatorYAchseK();
-    boolean initiatorZAchseK();
+    ESensorstatus initiatorXAchseK();
+    ESensorstatus initiatorYAchseK();
+    ESensorstatus initiatorZAchseK();
 }

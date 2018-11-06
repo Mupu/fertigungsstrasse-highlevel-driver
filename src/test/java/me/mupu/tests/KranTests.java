@@ -2,13 +2,20 @@ package me.mupu.tests;
 
 import me.mupu.FertigungsstrasseHLD;
 import me.mupu._testUsbInterface.UsbOptoRel32;
+import me.mupu.enums.motorbewegungen.EMotorbewegungYAchse;
+import me.mupu.enums.motorbewegungen.EMotorbewegungZAchse;
+import me.mupu.enums.motorbewegungen.EMotorbewegungXAchse;
+import me.mupu.enums.motorbewegungen.EMotorstatus;
+import me.mupu.enums.sensoren.ESensorXAchse;
+import me.mupu.enums.sensoren.ESensorYAchse;
+import me.mupu.enums.sensoren.ESensorZAchse;
+import me.mupu.enums.sensoren.ESensorstatus;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 
 import me.mupu.interfaces.maschinen.IKran;
-import me.mupu.interfaces.maschinen.IKran.*;
 
 import static me.mupu.interfaces.bitpos.IInput.*;
 import static me.mupu.interfaces.bitpos.IOutput.*;
@@ -28,11 +35,6 @@ class KranTests {
         f = FertigungsstrasseHLD.instance;
 
         usb = FertigungsstrasseHLD.instance.usbInterface;
-
-        System.out.println("******************" +
-                "\n* SCHIEBER-TESTS *" +
-                "\n******************"
-        );
     }
 
     @BeforeEach
@@ -43,24 +45,24 @@ class KranTests {
 
 
     @Test
-    void setStatusMotorXAchseK() {
+    void setMotorstatusXAchseK() {
         // AUS
         f.output = Q_18 | Q_19; // setzte bits
-        kran.setStatusMotorXAchseK(Q_XAchseK.AUS);
+        kran.setMotorstatusXAchseK(EMotorbewegungXAchse.AUS);
         assertEquals(f.output & (Q_18 | Q_19), 0);
 
 
         // LINKS
         beforeEach();
         f.output = Q_18;
-        kran.setStatusMotorXAchseK(Q_XAchseK.LINKS);
+        kran.setMotorstatusXAchseK(EMotorbewegungXAchse.LINKS);
         assertEquals(f.output & (Q_18 | Q_19), Q_19);
 
 
         // RECHTS
         beforeEach();
         f.output = Q_19;
-        kran.setStatusMotorXAchseK(Q_XAchseK.RECHTS);
+        kran.setMotorstatusXAchseK(EMotorbewegungXAchse.RECHTS);
         assertEquals(f.output & (Q_18 | Q_19), Q_18);
 
 
@@ -69,34 +71,34 @@ class KranTests {
         // GRENZE LINKS
         beforeEach();
         usb.setIn(I_18);
-        assertThrows(RuntimeException.class, () -> kran.setStatusMotorXAchseK(Q_XAchseK.LINKS));
+        assertThrows(RuntimeException.class, () -> kran.setMotorstatusXAchseK(EMotorbewegungXAchse.LINKS));
 
 
         // GRENZE RECHTS
         beforeEach();
         usb.setIn(I_17);
-        assertThrows(RuntimeException.class, () -> kran.setStatusMotorXAchseK(Q_XAchseK.RECHTS));
+        assertThrows(RuntimeException.class, () -> kran.setMotorstatusXAchseK(EMotorbewegungXAchse.RECHTS));
     }
 
     @Test
-    void getStatusMotorXAchseK() {
+    void getPositionXAchseK() {
         // DAZWISCHEN
-        assertEquals(kran.getStatusMotorXAchseK(), I_XAchseK.DAZWISCHEN);
+        assertEquals(kran.getPositionXAchseK(), ESensorXAchse.DAZWISCHEN);
 
         // RECHTS
         beforeEach();
         usb.setIn(I_17);
-        assertEquals(kran.getStatusMotorXAchseK(), I_XAchseK.RECHTS);
+        assertEquals(kran.getPositionXAchseK(), ESensorXAchse.RECHTS);
 
         // LINKS
         beforeEach();
         usb.setIn(I_18);
-        assertEquals(kran.getStatusMotorXAchseK(), I_XAchseK.LINKS);
+        assertEquals(kran.getPositionXAchseK(), ESensorXAchse.LINKS);
 
         // ERROR
         beforeEach();
         usb.setIn(I_17 | I_18);
-        assertThrows(RuntimeException.class, () -> kran.getStatusMotorXAchseK());
+        assertThrows(RuntimeException.class, () -> kran.getPositionXAchseK());
     }
 
 
@@ -105,24 +107,24 @@ class KranTests {
 
 
     @Test
-    void setStatusMotorYAchseK() {
+    void setMotorstatusYAchseK() {
         // AUS
         f.output = Q_20 | Q_21; // setzte bits
-        kran.setStatusMotorYAchseK(Q_YAchseK.AUS);
+        kran.setMotorstatusYAchseK(EMotorbewegungYAchse.AUS);
         assertEquals(f.output & (Q_20 | Q_21), 0);
 
 
         // VOR
         beforeEach();
         f.output = Q_21;
-        kran.setStatusMotorYAchseK(Q_YAchseK.VOR);
+        kran.setMotorstatusYAchseK(EMotorbewegungYAchse.VOR);
         assertEquals(f.output & (Q_20 | Q_21), Q_20);
 
 
         // ZURUECK
         beforeEach();
         f.output = Q_20;
-        kran.setStatusMotorYAchseK(Q_YAchseK.ZURUECK);
+        kran.setMotorstatusYAchseK(EMotorbewegungYAchse.ZURUECK);
         assertEquals(f.output & (Q_20 | Q_21), Q_21);
 
 
@@ -131,34 +133,34 @@ class KranTests {
         // GRENZE VORNE
         beforeEach();
         usb.setIn(I_19);
-        assertThrows(RuntimeException.class, () -> kran.setStatusMotorYAchseK(Q_YAchseK.VOR));
+        assertThrows(RuntimeException.class, () -> kran.setMotorstatusYAchseK(EMotorbewegungYAchse.VOR));
 
 
         // GRENZE HINTEN
         beforeEach();
         usb.setIn(I_20);
-        assertThrows(RuntimeException.class, () -> kran.setStatusMotorYAchseK(Q_YAchseK.ZURUECK));
+        assertThrows(RuntimeException.class, () -> kran.setMotorstatusYAchseK(EMotorbewegungYAchse.ZURUECK));
     }
 
     @Test
-    void getStatusMotorYAchseK() {
+    void getPositionYAchseK() {
         // DAZWISCHEN
-        assertEquals(kran.getStatusMotorYAchseK(), I_YAchseK.DAZWISCHEN);
+        assertEquals(kran.getPositionYAchseK(), ESensorYAchse.DAZWISCHEN);
 
         // VORNE
         beforeEach();
         usb.setIn(I_19);
-        assertEquals(kran.getStatusMotorYAchseK(), I_YAchseK.VORNE);
+        assertEquals(kran.getPositionYAchseK(), ESensorYAchse.VORNE);
 
         // HINTEN
         beforeEach();
         usb.setIn(I_20);
-        assertEquals(kran.getStatusMotorYAchseK(), I_YAchseK.HINTEN);
+        assertEquals(kran.getPositionYAchseK(), ESensorYAchse.HINTEN);
 
         // ERROR
         beforeEach();
         usb.setIn(I_19 | I_20);
-        assertThrows(RuntimeException.class, () -> kran.getStatusMotorYAchseK());
+        assertThrows(RuntimeException.class, () -> kran.getPositionYAchseK());
     }
 
 
@@ -167,24 +169,24 @@ class KranTests {
 
 
     @Test
-    void setStatusMotorZAchseK() {
+    void setMotorstatusZAchseK() {
         // AUS
         f.output = Q_22 | Q_23; // setzte bits
-        kran.setStatusMotorZAchseK(Q_ZAchseK.AUS);
+        kran.setMotorstatusZAchseK(EMotorbewegungZAchse.AUS);
         assertEquals(f.output & (Q_22 | Q_23), 0);
 
 
         // HOCH
         beforeEach();
         f.output = Q_23;
-        kran.setStatusMotorZAchseK(Q_ZAchseK.HOCH);
+        kran.setMotorstatusZAchseK(EMotorbewegungZAchse.AUF);
         assertEquals(f.output & (Q_22 | Q_23), Q_22);
 
 
         // RUNTER
         beforeEach();
         f.output = Q_22;
-        kran.setStatusMotorZAchseK(Q_ZAchseK.RUNTER);
+        kran.setMotorstatusZAchseK(EMotorbewegungZAchse.AB);
         assertEquals(f.output & (Q_22 | Q_23), Q_23);
 
 
@@ -193,45 +195,49 @@ class KranTests {
         // GRENZE OBEN
         beforeEach();
         usb.setIn(I_21);
-        assertThrows(RuntimeException.class, () -> kran.setStatusMotorZAchseK(Q_ZAchseK.HOCH));
+        assertThrows(RuntimeException.class, () -> kran.setMotorstatusZAchseK(EMotorbewegungZAchse.AUF));
 
 
         // GRENZE UNTEN
         beforeEach();
         usb.setIn(I_22);
-        assertThrows(RuntimeException.class, () -> kran.setStatusMotorZAchseK(Q_ZAchseK.RUNTER));
+        assertThrows(RuntimeException.class, () -> kran.setMotorstatusZAchseK(EMotorbewegungZAchse.AB));
     }
 
     @Test
-    void getStatusMotorZAchseK() {
+    void getPositionZAchseK() {
         // DAZWISCHEN
-        assertEquals(kran.getStatusMotorZAchseK(), I_ZAchseK.DAZWISCHEN);
+        System.out.println("DAZWISCHEN");
+        assertEquals(kran.getPositionZAchseK(), ESensorZAchse.DAZWISCHEN);
 
         // OBEN
+        System.out.println("OBEN");
         beforeEach();
         usb.setIn(I_21);
-        assertEquals(kran.getStatusMotorZAchseK(), I_ZAchseK.OBEN);
+        assertEquals(kran.getPositionZAchseK(), ESensorZAchse.OBEN);
 
         // UNTEN
+        System.out.println("UNTEN");
         beforeEach();
         usb.setIn(I_22);
-        assertEquals(kran.getStatusMotorZAchseK(), I_ZAchseK.UNTEN);
+        assertEquals(kran.getPositionZAchseK(), ESensorZAchse.UNTEN);
 
         // ERROR
+        System.out.println("ERROR");
         beforeEach();
         usb.setIn(I_21 | I_22);
-        assertThrows(RuntimeException.class, () -> kran.getStatusMotorZAchseK());
+        assertThrows(RuntimeException.class, () -> kran.getPositionZAchseK());
     }
 
     @Test
-    void setStatusMagnetK() {
+    void setMotorstatusMagnetK() {
         // AN
-        kran.setStatusMagnetK(Q_MagnetK.AN);
+        kran.setMotorstatusMagnetK(EMotorstatus.AN);
         assertEquals(f.output & Q_24, Q_24);
 
         // AUS
         beforeEach();
-        kran.setStatusMagnetK(Q_MagnetK.AUS);
+        kran.setMotorstatusMagnetK(EMotorstatus.AUS);
         assertEquals(f.output & Q_24, 0);
     }
 
@@ -239,54 +245,54 @@ class KranTests {
     void istEinlegestationBelegtK() {
         // BELEGT
         usb.setIn(I_01);
-        assertEquals(kran.istEinlegestationBelegtK(), I_EinlegestationK.BELEGT);
+        assertEquals(kran.istEinlegestationBelegtK(), ESensorstatus.SIGNAL);
 
         // NICHT_BELEGT
         beforeEach();
-        assertEquals(kran.istEinlegestationBelegtK(), I_EinlegestationK.NICHT_BELEGT);
+        assertEquals(kran.istEinlegestationBelegtK(), ESensorstatus.KEIN_SIGNAL);
     }
 
     @Test
     void istAusschleussbahnBelegtK() {
         // BELEGT
         usb.setIn(I_14);
-        assertEquals(kran.istAusschleussbahnBelegtK(), I_AusschleussbahnK.BELEGT);
+        assertEquals(kran.istAusschleussbahnBelegtK(), ESensorstatus.SIGNAL);
 
         // NICHT_BELEGT
         beforeEach();
-        assertEquals(kran.istAusschleussbahnBelegtK(), I_AusschleussbahnK.NICHT_BELEGT);
+        assertEquals(kran.istAusschleussbahnBelegtK(), ESensorstatus.KEIN_SIGNAL);
     }
 
     @Test
     void initiatorXAchseK() {
         // true
         usb.setIn(I_28);
-        assertTrue(kran.initiatorXAchseK());
+        assertEquals(kran.initiatorXAchseK(), ESensorstatus.SIGNAL);
 
         // false
         beforeEach();
-        assertFalse(kran.initiatorXAchseK());
+        assertEquals(kran.initiatorXAchseK(), ESensorstatus.KEIN_SIGNAL);
     }
 
     @Test
     void initiatorYAchseK() {
         // true
         usb.setIn(I_29);
-        assertTrue(kran.initiatorYAchseK());
+        assertEquals(kran.initiatorYAchseK(), ESensorstatus.SIGNAL);
 
         // false
         beforeEach();
-        assertFalse(kran.initiatorYAchseK());
+        assertEquals(kran.initiatorYAchseK(), ESensorstatus.KEIN_SIGNAL);
     }
 
     @Test
     void initiatorZAchseK() {
         // true
         usb.setIn(I_30);
-        assertTrue(kran.initiatorZAchseK());
+        assertEquals(kran.initiatorZAchseK(), ESensorstatus.SIGNAL);
 
         // false
         beforeEach();
-        assertFalse(kran.initiatorZAchseK());
+        assertEquals(kran.initiatorZAchseK(), ESensorstatus.KEIN_SIGNAL);
     }
 }

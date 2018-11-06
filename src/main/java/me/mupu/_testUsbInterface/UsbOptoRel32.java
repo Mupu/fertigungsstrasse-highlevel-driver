@@ -8,7 +8,7 @@ public class UsbOptoRel32 {
         return true;
     }
 
-    private int in = 0;
+    public int in = 0;
 
     public int digitalIn() throws IOException {
         return in;

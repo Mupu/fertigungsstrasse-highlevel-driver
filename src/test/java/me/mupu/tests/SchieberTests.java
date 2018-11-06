@@ -2,10 +2,13 @@ package me.mupu.tests;
 
 import me.mupu.FertigungsstrasseHLD;
 import me.mupu._testUsbInterface.UsbOptoRel32;
+import me.mupu.enums.motorbewegungen.EMotorbewegungXAchse;
+import me.mupu.enums.sensoren.ESensorXAchse;
+import me.mupu.enums.sensoren.ESensorstatus;
 import org.junit.jupiter.api.*;
 
 import me.mupu.interfaces.maschinen.IMSchieber;
-import me.mupu.interfaces.maschinen.IMSchieber.*;
+
 import static me.mupu.interfaces.bitpos.IInput.*;
 import static me.mupu.interfaces.bitpos.IOutput.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -40,64 +43,84 @@ class SchieberTests {
 
 
     @Test
-    void istBelegtS() {
-
-        // istBelegtS
-        usb.setIn(I_01);
-        assertTrue(schieber.istBelegtS());
-
-    }
-
-    @Test
-    void istInAusgangslageS() {
-
-        // istInAusgagslageS
-        usb.setIn(I_02);
-        assertTrue(schieber.istInAusgangslageS());
-
-    }
-
-    @Test
-    void istBandpositionS() {
-
-        // istBandpositionS
-        usb.setIn(I_03);
-        assertTrue(schieber.istBandpositionS());
-
-    }
-
-    @Test
-    void setStatusEinlegestationS_AUS() {
+    void setMotorstatusSchieberS() {
         // AUS
         f.output = Q_1 | Q_2; // setzte bits
-        schieber.setStatusEinlegestationS(Q_EinlegestationS.AUS);
+        schieber.setMotorstatusSchieberS(EMotorbewegungXAchse.AUS);
         assertEquals(f.output & (Q_1 | Q_2), 0);
 
 
         // VOR
         beforeEach();
         f.output = Q_2;
-        schieber.setStatusEinlegestationS(Q_EinlegestationS.VOR);
+        schieber.setMotorstatusSchieberS(EMotorbewegungXAchse.RECHTS);
         assertEquals(f.output & (Q_1 | Q_2), Q_1);
 
 
         // RUECK
         beforeEach();
         f.output = Q_1;
-        schieber.setStatusEinlegestationS(Q_EinlegestationS.RUECK);
+        schieber.setMotorstatusSchieberS(EMotorbewegungXAchse.LINKS);
         assertEquals(f.output & (Q_1 | Q_2), Q_2);
 
 
-        // todo vor gleich nach links ? rueck gleich nach rechts ??
-        // GRENZE LINKS(VOR)
-        beforeEach();
-        usb.setIn(I_02); // ausgangslage
-        assertThrows(RuntimeException.class, () -> schieber.setStatusEinlegestationS(Q_EinlegestationS.VOR));
-
+        // todo vor gleich nach rechts ? rueck gleich nach links ??
         // GRENZE RECHTS(RUECK)
         beforeEach();
         usb.setIn(I_03); // bandposition
-        assertThrows(RuntimeException.class, () -> schieber.setStatusEinlegestationS(Q_EinlegestationS.RUECK));
+        assertThrows(RuntimeException.class, () -> schieber.setMotorstatusSchieberS(EMotorbewegungXAchse.RECHTS));
+
+        // GRENZE LINKS(VOR)
+        beforeEach();
+        usb.setIn(I_02); // ausgangslage
+        assertThrows(RuntimeException.class, () -> schieber.setMotorstatusSchieberS(EMotorbewegungXAchse.LINKS));
     }
+    
+    @Test
+    void getPositionSchieberS() {
+        // DAZWISCHEN
+        assertEquals(schieber.getPositionSchieberS(), ESensorXAchse.DAZWISCHEN);
+
+        // RECHTS
+        beforeEach();
+        usb.setIn(I_03);
+        assertEquals(schieber.getPositionSchieberS(), ESensorXAchse.RECHTS);
+
+        // LINKS
+        beforeEach();
+        usb.setIn(I_02);
+        assertEquals(schieber.getPositionSchieberS(), ESensorXAchse.LINKS);
+
+        // ERROR
+        beforeEach();
+        usb.setIn(I_02 | I_03);
+        assertThrows(RuntimeException.class, () -> schieber.getPositionSchieberS());
+    }
+
+    @Test
+    void istEinlegestationBelegtS() {
+        // true
+        usb.setIn(I_01);
+        assertEquals(schieber.istEinlegestationBelegtS(), ESensorstatus.SIGNAL);
+
+        // false
+        beforeEach();
+        assertEquals(schieber.istEinlegestationBelegtS(), ESensorstatus.KEIN_SIGNAL);
+    }
+
+    @Test
+    void istUebergabestelleVorBohrmaschineBelegtS() {
+
+        // istEinlegestationBelegtS
+        usb.setIn(I_13);
+        assertEquals(schieber.istUebergabestelleVorBohrmaschineBelegtS(), ESensorstatus.SIGNAL);
+
+        // false
+        beforeEach();
+        assertEquals(schieber.istUebergabestelleVorBohrmaschineBelegtS(), ESensorstatus.KEIN_SIGNAL);
+
+    }
+
+
 
 }

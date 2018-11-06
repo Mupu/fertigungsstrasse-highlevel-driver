@@ -1,31 +1,30 @@
 package me.mupu.interfaces.maschinen;
 
+import me.mupu.enums.motorbewegungen.EMotorbewegungZAchse;
+import me.mupu.enums.motorbewegungen.EMotorstatus;
+import me.mupu.enums.sensoren.ESensorZAchse;
+import me.mupu.enums.sensoren.ESensorstatus;
+
 public interface IMBohrmaschine {
 
-    enum Q_HubBm {
-        AUF, AB, AUS
-    }
 
-    enum WerkzeugAntriebBm {
-        AN, AUS
-    }
+    void setMotorstatusHubBm(EMotorbewegungZAchse neuerStatus);
 
-    enum BandBm {
-        AN, AUS
-    }
+    void setMotorstatusWerkzeugAntriebBm(EMotorstatus neuerStatus);
 
-    enum I_HubBm {
-        OBEN, UNTEN, DAZWISCHEN
-    }
+    void setMotorstatusBandBm(EMotorstatus neuerStatus);
 
-    void setStatusHubBm(Q_HubBm neuerStatus);
-    I_HubBm getStatusHubBm();
+    ESensorZAchse getPositionHubBm();
 
-    void setStatusWerkzeugAntriebBm(WerkzeugAntriebBm neuerStatus);
+    /**
+     * (I_13) Fotowiderstand Bandstart vor Bohrmaschine
+     */
+    ESensorstatus istUebergabestelleVorBohrmaschineBelegtBm();
 
-    void setStatusBandBm(BandBm neuerStatus);
-
-    boolean istBandstartBm();
-    boolean initiatorBm();
+    /**
+     * (I_25) Initiator Bohrmaschine Werkstückposition
+     */
+    // todo ist das hubinitiator ?
+    ESensorstatus initiatorBm();
 
 }

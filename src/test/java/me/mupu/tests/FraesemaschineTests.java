@@ -28,10 +28,7 @@ class FraesemaschineTests {
 
         usb = FertigungsstrasseHLD.instance.usbInterface;
 
-        System.out.println("******************" +
-                "\n* SCHIEBER-TESTS *" +
-                "\n******************"
-        );
+
     }
 
     @BeforeEach
