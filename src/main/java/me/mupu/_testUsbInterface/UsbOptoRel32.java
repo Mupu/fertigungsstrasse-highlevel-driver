@@ -15,7 +15,7 @@ public class UsbOptoRel32 {
     }
 
     public void setIn(int in) {
-        System.out.println("set: " + Integer.toBinaryString(~in));
+        System.out.println("set: " + Integer.toBinaryString(~in) + "\n");
         this.in = ~in;
     }
 
