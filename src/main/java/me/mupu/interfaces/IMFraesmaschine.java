@@ -2,32 +2,37 @@ package me.mupu.interfaces;
 
 public interface IMFraesmaschine {
 
-    enum Hub {
-        AUF, AB, AUS;
+    enum Q_HubF {
+        AUF, AB, AUS
     }
 
-    enum Querschlitten {
-        RUECK, VOR, AUS;
+    enum QuerschlittenF {
+        RUECK, VOR, AUS
     }
 
-    enum WerkzeugAntrieb {
-        AN, AUS;
+    enum WerkzeugAntriebF {
+        AN, AUS
     }
 
-    enum Band {
-        AN, AUS;
+    enum BandF {
+        AN, AUS
     }
 
-    void setStatusFraesmaschineHub(Hub neuerStatus);
-    Hub getStatusHub();
+    enum I_HubF {
+        OBEN, UNTEN, DAZWISCHEN
+    }
 
-    void setStatusQuerschlitten(Querschlitten neuerStatus);
-    Querschlitten getStatusQuerschlitten();
+    void setStatusHubF(Q_HubF neuerStatus);
+    I_HubF getStatusHubF();
 
-    void setStatusFraesmaschineWerkzeugAntrieb(WerkzeugAntrieb neuerStatus);
-    WerkzeugAntrieb getStatusWerkzeugAntrieb();
+    void setStatusQuerschlittenF(QuerschlittenF neuerStatus);
 
-    void setStatusFraesmaschineBand(Band neuerStatus);
-    Band getStatusBand();
+    void setStatusWerkzeugAntriebF(WerkzeugAntriebF neuerStatus);
 
+    void setStatusBandF(BandF neuerStatus);
+    boolean istBandpositionF();
+
+    boolean istStaenderpositionF();
+
+    boolean initiatorF();
 }

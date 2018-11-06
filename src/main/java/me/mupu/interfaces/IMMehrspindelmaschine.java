@@ -2,32 +2,42 @@ package me.mupu.interfaces;
 
 public interface IMMehrspindelmaschine {
 
-    enum Hub {
-        AUF, AB, AUS;
+    enum Q_HubM {
+        AUF, AB, AUS
     }
 
-    enum Revolverdrehung {
-        AN, AUS;
+    enum RevolverdrehungM {
+        AN, AUS
     }
 
-    enum WerkzeugAntrieb {
-        AN, AUS;
+    enum WerkzeugAntriebM {
+        AN, AUS
     }
 
-    enum Band {
-        AN, AUS;
+    enum BandM {
+        AN, AUS
     }
 
-    boolean setStatusMehrspindelmaschineHub(Hub neuerStatus);
-    Hub getStatusHub();
+    enum I_HubM {
+        OBEN, UNTEN, DAZWISCHEN
+    }
 
-    boolean setStatusRevolverdrehung(Revolverdrehung neuerStatus);
-    Revolverdrehung getStatusRevolverdrehung();
+    enum I_AusschleussbahnM {
+        BELEGT, NICHT_BELEGT
+    }
 
-    boolean setStatusMehrspindelmaschineWerkzeugAntrieb(WerkzeugAntrieb neuerStatus);
-    WerkzeugAntrieb getStatusWerkzeugAntrieb();
+    void setStatusHubM(Q_HubM neuerStatus);
+    I_HubM getStatusHubM();
 
-    boolean setStatusMehrspindelmaschineBand(Band neuerStatus);
-    Band getStatusBand();
+    void setStatusRevolverdrehungM(RevolverdrehungM neuerStatus);
 
+    void setStatusWerkzeugAntriebM(WerkzeugAntriebM neuerStatus);
+
+    void setStatusBandM(BandM neuerStatus);
+
+    boolean revolverPositionMelderM();
+
+    I_AusschleussbahnM istAusschleussbahnBelegtM();
+
+    boolean initiatorM();
 }

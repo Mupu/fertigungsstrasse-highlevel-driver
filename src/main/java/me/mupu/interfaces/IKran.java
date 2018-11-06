@@ -26,15 +26,15 @@ public interface IKran {
     }
 
     enum I_XAchseK {
-        RECHTS, LINKS
+        RECHTS, LINKS, DAZWISCHEN
     }
 
     enum I_YAchseK {
-        VORNE, HINTEN
+        VORNE, HINTEN, DAZWISCHEN
     }
 
     enum I_ZAchseK {
-        OBEN, UNTEN
+        OBEN, UNTEN, DAZWISCHEN
     }
 
     void setStatusMotorXAchseK(Q_XAchseK neuerStatus);
@@ -46,7 +46,7 @@ public interface IKran {
     void setStatusMotorZAchseK(Q_ZAchseK neuerStatus);
     I_ZAchseK getStatusMotorZAchseK();
 
-    void setStatusMagnet(Q_MagnetK neuerStatus);
+    void setStatusMagnetK(Q_MagnetK neuerStatus);
 
     I_EinlegestationK istEinlegestationBelegtK();
     I_AusschleussbahnK istAusschleussbahnBelegtK();

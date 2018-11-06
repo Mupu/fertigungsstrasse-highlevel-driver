@@ -2,7 +2,7 @@ package me.mupu.interfaces;
 
 public interface IMBohrmaschine {
 
-    enum HubBm {
+    enum Q_HubBm {
         AUF, AB, AUS
     }
 
@@ -14,12 +14,16 @@ public interface IMBohrmaschine {
         AN, AUS
     }
 
-    void setStatusBohrmaschineHub(HubBm neuerStatus);
-    HubBm getStatusBohrmaschineHub();
+    enum I_HubBm {
+        OBEN, UNTEN, DAZWISCHEN
+    }
 
-    void setStatusBohrmaschineWerkzeugAntrieb(WerkzeugAntriebBm neuerStatus);
+    void setStatusHubBm(Q_HubBm neuerStatus);
+    I_HubBm getStatusHubBm();
 
-    void setStatusBohrmaschineBand(BandBm neuerStatus);
+    void setStatusWerkzeugAntriebBm(WerkzeugAntriebBm neuerStatus);
+
+    void setStatusBandBm(BandBm neuerStatus);
 
     boolean istBandstartBm();
     boolean InitiatorBm();
