@@ -23,16 +23,28 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
     // DEBUG
     public static FertigungsstrasseHLD instance;
     public final UsbOptoRel32 usbInterface;
-    public int output = 0;
+    public int output = 0; // default alle aus
+    public int input = ~0; // default alle aus
 
     // RELEASE
 //    private static FertigungsstrasseHLD instance;
 //    private final UsbOptoRel32 usbInterface;
-//    private int output = 0;
+//    private int output = 0; // default alle aus
+
+    //    /**
+//     * Bei Benutzung sollte eine locale kopie erstellt werden,
+//     * da sich diese Variable verändern kann.
+//     */
+//    private int input = ~0; // default alle aus
+    private static int READ_DELAY = 0;
+    private Thread readingThread;
 
     /**
-     * Oeffnet USB-Interface. Wirft ggf. fehler.
+     * Versucht USB-Interface zu oeffnen.
+     *
+     * @throws RuntimeException
      */
+    // todo maybe open & close methode ?
     private FertigungsstrasseHLD() {
 
         usbInterface = new UsbOptoRel32();
@@ -40,7 +52,24 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
         if (!usbInterface.open())
             throw new RuntimeException("Quancom Verbindung konnte nicht hergestellt werden!");
 
-        // todo initial state
+
+        readingThread = new Thread(() -> {
+            while (true) {
+                try {
+                    if (READ_DELAY != 0) {
+                        Thread.sleep(READ_DELAY); // todo testen ob funktioniert
+                    }
+                    input = usbInterface.digitalIn();
+                } catch (Exception e) {
+                    notfallStop();
+                    System.exit(1); // todo testen ?
+                    throw new RuntimeException("Interface nicht mehr erreichbar!");
+                }
+            }
+        });
+        readingThread.start();
+
+        // todo initial state ?
     }
 
 
@@ -74,6 +103,28 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
         return instance;
     }
 
+    /**
+     * Versucht alle output-bits auf 'aus' zu setzen.
+     * Beendet nicht den readingThread.
+     */
+    public static void notfallStop() { // todo testen
+        try {
+            instance.usbInterface.digitalOut(0);
+        } catch (Exception ignored) {
+        }
+    }
+
+    /**
+     * Setzt einen delay für den aufruf der usbInterface-digitalIn Methode fest.
+     * 0 = kein Delay.
+     * Default ist 0.
+     *
+     * @param readDelay - in Millisekunden
+     */
+    public static void setReadDelay(int readDelay) {
+        FertigungsstrasseHLD.READ_DELAY = readDelay;
+    }
+
 
     /**
      * Setzt die Bits.
@@ -92,24 +143,11 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
 
 
     /**
-     * Liesst den input vom USB-Interface.
-     *
-     * @return Daten als int
-     */
-    private int read() {
-        try {
-            return usbInterface.digitalIn();
-        } catch (IOException e) {
-            e.printStackTrace();
-            throw new RuntimeException("Interface nicht mehr erreichbar!");
-        }
-    }
-
-
-    /**
      * Gibt den output ueber das USB-Interface aus.
+     *
+     * @throws RuntimeException wenn USB-Interface nicht erreichbar ist
      */
-    private void write() {
+    private synchronized void write() {
         try {
             usbInterface.digitalOut(output);
         } catch (IOException e) {
@@ -119,27 +157,10 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
     }
 
 
-    /**
-     * Setzt alle outputs auf 0 und beendet das Program.
-     */
-    public static void notStop() {
-        try {
-            instance.usbInterface.digitalOut(0);
-        } catch (Exception ignored) {}
-
-        System.exit(0);
-    }
-
-    // todo bessere interface javadocs
-    // todo read thread machen und read() nur variable lesen lassen
-    // todo notStop vor error benutzen
-    // todo alle read() in locale variable speichern
-    // todo add synchronized to every set method
-    // todo bei set noch inputs checken (runtimeexceptions werfen und maschine ausschalten)
-    // todo fehler bits spezifizieren
-    // todo error bei falschen I_.. zb: I_21 | I_22
-    // todo flags hinzufügen ÜBERDENKEN
-    //  1 = kann annehmen 0 = kann nicht annehmen <- setzten die maschinen selber
+    // todo error bei falschen I_.. zb: I_21 | I_22 <-- get methoden
+    // todo add synchronized check testclass
+    // todo flags hinzufügen ÜBERDENKEN (band login hinzufügen)
+    //  1 = kann annehmen 0 = kann nicht annehmen <- setzen die maschinen selber
     // (M1)(M2)(M3) (Ausgabe)
     //  1   1   1   (1) <-- () = ausschleuse (kran muss ihn abholen)
     //  0   1   1   (1)
@@ -152,11 +173,11 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
     //  1   1   0   (0)
     //  1   1   1   (0)
     //  1   1   1   (1)
+    // todo zimmer fragen wegen vor rueck z.B. Setzt (Q_12) Motor-Fraesmaschine Querschlitten rueck, prueft (I_12) ET Fräsmaschine Querschlitten Ständerposition (HINTEN).
 
-
-    /************************
-     *  IMSchieber
-     ************************/
+    //************************
+    //*  IMSchieber
+    //************************
     @Override
     public synchronized void setMotorstatusSchieberS(EMotorbewegungXAchse neuerStatus) {
         if (neuerStatus == EMotorbewegungXAchse.AUS) {
@@ -164,11 +185,21 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
 
         } else if (neuerStatus == EMotorbewegungXAchse.RECHTS) {
             resetOutputBit(Q_2);
-            setOutputBit(Q_1);
+
+            if (getPositionSchieberS() == ESensorXAchse.RECHTS) {
+                notfallStop();
+                throw new RuntimeException("Illegale Aktion: set Q_1 wenn I_03 aktiv");
+            } else
+                setOutputBit(Q_1);
 
         } else if (neuerStatus == EMotorbewegungXAchse.LINKS) {
             resetOutputBit(Q_1);
-            setOutputBit(Q_2);
+
+            if (getPositionSchieberS() == ESensorXAchse.LINKS) {
+                notfallStop();
+                throw new RuntimeException("Illegale Aktion: set Q_2 wenn I_02 aktiv");
+            } else
+                setOutputBit(Q_2);
 
         }
         write();
@@ -176,35 +207,36 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
 
     @Override
     public ESensorXAchse getPositionSchieberS() {
-        int data = read();
-        if ((data & (I_02 | I_03)) == (I_02 | I_03))
+        int data = input;
+        if ((data & (I_02 | I_03)) == (I_02 | I_03)) {
             return ESensorXAchse.DAZWISCHEN;
-        else if ((data & I_02) == 0)
+
+        } else if ((data & I_02) == 0) {
             return ESensorXAchse.LINKS;
-        else if ((data & I_03) == 0)
+
+        } else if ((data & I_03) == 0) {
             return ESensorXAchse.RECHTS;
-        else {
-            setMotorstatusSchieberS(EMotorbewegungXAchse.AUS);
-            throw new RuntimeException("Illegale Bits");
+
+        } else {
+            notfallStop();
+            throw new RuntimeException("Illegaler Zustand: (I_02 | I_03)");
         }
     }
 
     @Override
     public ESensorstatus istEinlegestationBelegtS() {
-        return (read() & I_01) == 0 ? ESensorstatus.SIGNAL : ESensorstatus.KEIN_SIGNAL;
+        return (input & I_01) == 0 ? ESensorstatus.SIGNAL : ESensorstatus.KEIN_SIGNAL;
     }
 
     @Override
     public ESensorstatus istUebergabestelleVorBohrmaschineBelegtS() {
-        return (read() & I_13) == 0 ? ESensorstatus.SIGNAL : ESensorstatus.KEIN_SIGNAL;
+        return (input & I_13) == 0 ? ESensorstatus.SIGNAL : ESensorstatus.KEIN_SIGNAL;
     }
 
 
-
-
-    /************************
-     *  IKran
-     ************************/
+    //************************
+    //*  IKran
+    //************************
     @Override
     public synchronized void setMotorstatusXAchseK(EMotorbewegungXAchse neuerStatus) {
         if (neuerStatus == EMotorbewegungXAchse.AUS) {
@@ -212,11 +244,21 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
 
         } else if (neuerStatus == EMotorbewegungXAchse.LINKS) {
             resetOutputBit(Q_18);
-            setOutputBit(Q_19);
+
+            if (getPositionXAchseK() == ESensorXAchse.LINKS) {
+                notfallStop();
+                throw new RuntimeException("Illegale Aktion: set Q_19 wenn I_18 aktiv");
+            } else
+                setOutputBit(Q_19);
 
         } else if (neuerStatus == EMotorbewegungXAchse.RECHTS) {
             resetOutputBit(Q_19);
-            setOutputBit(Q_18);
+
+            if (getPositionXAchseK() == ESensorXAchse.RECHTS) {
+                notfallStop();
+                throw new RuntimeException("Illegale Aktion: set Q_18 wenn I_17 aktiv");
+            } else
+                setOutputBit(Q_18);
 
         }
         write();
@@ -224,30 +266,45 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
 
     @Override
     public ESensorXAchse getPositionXAchseK() {
-        if ((read() & (I_17 | I_18)) == (I_17 | I_18))
+        int data = input;
+
+        if ((data & (I_17 | I_18)) == (I_17 | I_18)) {
             return ESensorXAchse.DAZWISCHEN;
-        else if ((read() & I_17) == 0)
+
+        } else if ((data & I_17) == 0) {
             return ESensorXAchse.RECHTS;
-        else if ((read() & I_18) == 0)
+
+        } else if ((data & I_18) == 0) {
             return ESensorXAchse.LINKS;
-        else {
-            setMotorstatusXAchseK(EMotorbewegungXAchse.AUS);
-            throw new RuntimeException("Illegale Bits");
+
+        } else {
+            notfallStop();
+            throw new RuntimeException("Illegaler Zustand: (I_17 | I_18)");
         }
     }
 
     @Override
-    public void setMotorstatusYAchseK(EMotorbewegungYAchse neuerStatus) {
+    public synchronized void setMotorstatusYAchseK(EMotorbewegungYAchse neuerStatus) {
         if (neuerStatus == EMotorbewegungYAchse.AUS) {
             resetOutputBit(Q_20 | Q_21);
 
         } else if (neuerStatus == EMotorbewegungYAchse.VOR) {
             resetOutputBit(Q_21);
-            setOutputBit(Q_20);
+
+            if (getPositionYAchseK() == ESensorYAchse.VORNE) {
+                notfallStop();
+                throw new RuntimeException("Illegale Aktion: set Q_20 wenn I_19 aktiv");
+            } else
+                setOutputBit(Q_20);
 
         } else if (neuerStatus == EMotorbewegungYAchse.ZURUECK) {
             resetOutputBit(Q_20);
-            setOutputBit(Q_21);
+
+            if (getPositionYAchseK() == ESensorYAchse.HINTEN) {
+                notfallStop();
+                throw new RuntimeException("Illegale Aktion: set Q_21 wenn I_20 aktiv");
+            } else
+                setOutputBit(Q_21);
 
         }
         write();
@@ -255,30 +312,44 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
 
     @Override
     public ESensorYAchse getPositionYAchseK() {
-        if ((read() & (I_19 | I_20)) == (I_19 | I_20))
+        int data = input;
+
+        if ((data & (I_19 | I_20)) == (I_19 | I_20)) {
             return ESensorYAchse.DAZWISCHEN;
-        else if ((read() & I_19) == 0)
+
+        } else if ((data & I_19) == 0) {
             return ESensorYAchse.VORNE;
-        else if ((read() & I_20) == 0)
+
+        } else if ((data & I_20) == 0) {
             return ESensorYAchse.HINTEN;
-        else {
-            setMotorstatusYAchseK(EMotorbewegungYAchse.AUS);
-            throw new RuntimeException("Illegale Bits");
+
+        } else {
+            throw new RuntimeException("Illegaler Zustand: (I_19 | I_20)");
         }
     }
 
     @Override
-    public void setMotorstatusZAchseK(EMotorbewegungZAchse neuerStatus) {
+    public synchronized void setMotorstatusZAchseK(EMotorbewegungZAchse neuerStatus) {
         if (neuerStatus == EMotorbewegungZAchse.AUS) {
             resetOutputBit(Q_22 | Q_23);
 
         } else if (neuerStatus == EMotorbewegungZAchse.AUF) {
             resetOutputBit(Q_23);
-            setOutputBit(Q_22);
+
+            if (getPositionZAchseK() == ESensorZAchse.OBEN) {
+                notfallStop();
+                throw new RuntimeException("Illegale Aktion: set Q_22 wenn I_21 aktiv");
+            } else
+                setOutputBit(Q_22);
 
         } else if (neuerStatus == EMotorbewegungZAchse.AB) {
             resetOutputBit(Q_22);
-            setOutputBit(Q_23);
+
+            if (getPositionZAchseK() == ESensorZAchse.UNTEN) {
+                notfallStop();
+                throw new RuntimeException("Illegale Aktion: set Q_23 wenn I_22 aktiv");
+            } else
+                setOutputBit(Q_23);
 
         }
         write();
@@ -286,70 +357,85 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
 
     @Override
     public ESensorZAchse getPositionZAchseK() {
-        if ((read() & (I_21 | I_22)) == (I_21 | I_22))
+        int data = input;
+
+        if ((data & (I_21 | I_22)) == (I_21 | I_22)) {
             return ESensorZAchse.DAZWISCHEN;
-        else if ((read() & (I_21 | I_22)) == I_22)  // 21 geschaltet aber 22 nicht // todo nochmal anschauen
+
+        } else if ((data & (I_21 | I_22)) == I_22) {  // 21 geschaltet aber 22 nicht // todo nochmal anschauen
             return ESensorZAchse.OBEN;
-        else if ((read() & (I_22 | I_21)) == I_21)  // 22 geschaltet aber 21 nicht
+
+        } else if ((data & (I_22 | I_21)) == I_21) {  // 22 geschaltet aber 21 nicht
             return ESensorZAchse.UNTEN;
-        else {
-            setMotorstatusZAchseK(EMotorbewegungZAchse.AUS);
-            throw new RuntimeException("Illegale Bits");
+
+        } else {
+            throw new RuntimeException("Illegaler Zustand: (I_21 | I_22)");
         }
     }
 
     @Override
-    public void setMotorstatusMagnetK(EMotorstatus neuerStatus) {
+    public synchronized void setMotorstatusMagnetK(EMotorstatus neuerStatus) {
         if (neuerStatus == EMotorstatus.AUS) {
             resetOutputBit(Q_24);
 
         } else if (neuerStatus == EMotorstatus.AN) {
             setOutputBit(Q_24);
+
         }
         write();
     }
 
     @Override
     public ESensorstatus istEinlegestationBelegtK() {
-        return (read() & I_01) == 0 ? ESensorstatus.SIGNAL : ESensorstatus.KEIN_SIGNAL;
+        return (input & I_01) == 0 ? ESensorstatus.SIGNAL : ESensorstatus.KEIN_SIGNAL;
     }
 
     @Override
     public ESensorstatus istAusschleussbahnBelegtK() {
-        return (read() & I_14) == 0 ? ESensorstatus.SIGNAL : ESensorstatus.KEIN_SIGNAL;
+        return (input & I_14) == 0 ? ESensorstatus.SIGNAL : ESensorstatus.KEIN_SIGNAL;
     }
 
     @Override
     public ESensorstatus initiatorXAchseK() {
-        return (read() & I_28) == 0 ? ESensorstatus.SIGNAL : ESensorstatus.KEIN_SIGNAL;
+        return (input & I_28) == 0 ? ESensorstatus.SIGNAL : ESensorstatus.KEIN_SIGNAL;
     }
 
     @Override
     public ESensorstatus initiatorYAchseK() {
-        return (read() & I_29) == 0 ? ESensorstatus.SIGNAL : ESensorstatus.KEIN_SIGNAL;
+        return (input & I_29) == 0 ? ESensorstatus.SIGNAL : ESensorstatus.KEIN_SIGNAL;
     }
 
     @Override
     public ESensorstatus initiatorZAchseK() {
-        return (read() & I_30) == 0 ? ESensorstatus.SIGNAL : ESensorstatus.KEIN_SIGNAL;
+        return (input & I_30) == 0 ? ESensorstatus.SIGNAL : ESensorstatus.KEIN_SIGNAL;
     }
 
 
-    /************************
-     *  IMBohrmaschine
-     ************************/
+    //************************
+    //*  IMBohrmaschine
+    //************************
     @Override
-    public void setMotorstatusHubBm(EMotorbewegungZAchse neuerStatus) {
+    public synchronized void setMotorstatusHubBm(EMotorbewegungZAchse neuerStatus) {
         if (neuerStatus == EMotorbewegungZAchse.AUS) {
             resetOutputBit(Q_3 | Q_4);
 
         } else if (neuerStatus == EMotorbewegungZAchse.AUF) {
             resetOutputBit(Q_4);
-            setOutputBit(Q_3);
+
+            if (getPositionHubBm() == ESensorZAchse.OBEN) {
+                notfallStop();
+                throw new RuntimeException("Illegale Aktion: set Q_3 wenn I_04 aktiv");
+            } else
+                setOutputBit(Q_3);
 
         } else if (neuerStatus == EMotorbewegungZAchse.AB) {
             resetOutputBit(Q_3);
-            setOutputBit(Q_4);
+
+            if (getPositionHubBm() == ESensorZAchse.UNTEN) {
+                notfallStop();
+                throw new RuntimeException("Illegale Aktion: set Q_4 wenn I_05 aktiv");
+            } else
+                setOutputBit(Q_4);
 
         }
         write();
@@ -357,20 +443,25 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
 
     @Override
     public ESensorZAchse getPositionHubBm() {
-        if ((read() & (I_04 | I_05)) == (I_04 | I_05))
+        int data = input;
+
+        if ((data & (I_04 | I_05)) == (I_04 | I_05)) {
             return ESensorZAchse.DAZWISCHEN;
-        else if ((read() & I_04) == 0)
+
+        } else if ((data & I_04) == 0) {
             return ESensorZAchse.UNTEN;
-        else if ((read() & I_05) == 0)
+
+        } else if ((data & I_05) == 0) {
             return ESensorZAchse.OBEN;
-        else {
-            setMotorstatusHubBm(EMotorbewegungZAchse.AUS);
-            throw new RuntimeException("Illegale Bits");
+
+        } else {
+            notfallStop();
+            throw new RuntimeException("Illegaler Zustand: (I_04 | I_05)");
         }
     }
 
     @Override
-    public void setMotorstatusWerkzeugAntriebBm(EMotorstatus neuerStatus) {
+    public synchronized void setMotorstatusWerkzeugAntriebBm(EMotorstatus neuerStatus) {
         if (neuerStatus == EMotorstatus.AUS) {
             resetOutputBit(Q_5);
 
@@ -382,7 +473,7 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
     }
 
     @Override
-    public void setMotorstatusBandBm(EMotorstatus neuerStatus) {
+    public synchronized void setMotorstatusBandBm(EMotorstatus neuerStatus) {
         if (neuerStatus == EMotorstatus.AUS) {
             resetOutputBit(Q_15);
 
@@ -395,30 +486,40 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
 
     @Override
     public ESensorstatus istUebergabestelleVorBohrmaschineBelegtBm() {
-        return (read() & I_13) == 0 ? ESensorstatus.SIGNAL : ESensorstatus.KEIN_SIGNAL;
+        return (input & I_13) == 0 ? ESensorstatus.SIGNAL : ESensorstatus.KEIN_SIGNAL;
     }
 
     @Override
     public ESensorstatus initiatorBm() {
-        return (read() & I_25) == 0 ? ESensorstatus.SIGNAL : ESensorstatus.KEIN_SIGNAL;
+        return (input & I_25) == 0 ? ESensorstatus.SIGNAL : ESensorstatus.KEIN_SIGNAL;
     }
 
 
-    /************************
-     *  IMFraesmaschine
-     ************************/
+    //************************
+    //*  IMFraesmaschine
+    //************************
     @Override
-    public void setMotorstatusHubF(EMotorbewegungZAchse neuerStatus) {
+    public synchronized void setMotorstatusHubF(EMotorbewegungZAchse neuerStatus) {
         if (neuerStatus == EMotorbewegungZAchse.AUS) {
             resetOutputBit(Q_10 | Q_11);
 
         } else if (neuerStatus == EMotorbewegungZAchse.AUF) {
             resetOutputBit(Q_11);
-            setOutputBit(Q_10);
+
+            if (getPositionHubF() == ESensorZAchse.OBEN) {
+                notfallStop();
+                throw new RuntimeException("Illegale Aktion: set Q_10 wenn I_09 aktiv");
+            } else
+                setOutputBit(Q_10);
 
         } else if (neuerStatus == EMotorbewegungZAchse.AB) {
             resetOutputBit(Q_10);
-            setOutputBit(Q_11);
+
+            if (getPositionHubF() == ESensorZAchse.UNTEN) {
+                notfallStop();
+                throw new RuntimeException("Illegale Aktion: set Q_11 wenn I_10 aktiv");
+            } else
+                setOutputBit(Q_11);
 
         }
         write();
@@ -426,30 +527,45 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
 
     @Override
     public ESensorZAchse getPositionHubF() {
-        if ((read() & (I_09 | I_10)) == (I_09 | I_10))
+        int data = input;
+
+        if ((data & (I_09 | I_10)) == (I_09 | I_10)) {
             return ESensorZAchse.DAZWISCHEN;
-        else if ((read() & I_09) == 0)
+
+        } else if ((data & I_09) == 0) {
             return ESensorZAchse.OBEN;
-        else if ((read() & I_10) == 0)
+
+        } else if ((data & I_10) == 0) {
             return ESensorZAchse.UNTEN;
-        else {
-            setMotorstatusHubF(EMotorbewegungZAchse.AUS);
-            throw new RuntimeException("Illegale Bits");
+
+        } else {
+            notfallStop();
+            throw new RuntimeException("Illegaler Zustand: (I_09 | I_10)");
         }
     }
 
     @Override
-    public void setMotorstatusQuerschlittenF(EMotorbewegungYAchse neuerStatus) {
+    public synchronized void setMotorstatusQuerschlittenF(EMotorbewegungYAchse neuerStatus) {
         if (neuerStatus == EMotorbewegungYAchse.AUS) {
             resetOutputBit(Q_12 | Q_13);
 
         } else if (neuerStatus == EMotorbewegungYAchse.VOR) {
             resetOutputBit(Q_12);
-            setOutputBit(Q_13);
+
+            if (getPositionQuerschlittenF() == ESensorYAchse.VORNE) {
+                notfallStop();
+                throw new RuntimeException("Illegale Aktion: set Q_13 wenn I_11 aktiv");
+            } else
+                setOutputBit(Q_13);
 
         } else if (neuerStatus == EMotorbewegungYAchse.ZURUECK) {
             resetOutputBit(Q_13);
-            setOutputBit(Q_12);
+
+            if (getPositionQuerschlittenF() == ESensorYAchse.HINTEN) {
+                notfallStop();
+                throw new RuntimeException("Illegale Aktion: set Q_12 wenn I_12 aktiv");
+            } else
+                setOutputBit(Q_12);
 
         }
         write();
@@ -458,31 +574,37 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
 
     @Override
     public ESensorYAchse getPositionQuerschlittenF() {
-        if ((read() & (I_11 | I_12)) == (I_11 | I_12))
+        int data = input;
+
+        if ((data & (I_11 | I_12)) == (I_11 | I_12)) {
             return ESensorYAchse.DAZWISCHEN;
-        else if ((read() & I_11) == 0)
+
+        } else if ((data & I_11) == 0) {
             return ESensorYAchse.VORNE;
-        else if ((read() & I_12) == 0)
+
+        } else if ((data & I_12) == 0) {
             return ESensorYAchse.HINTEN;
-        else {
-            setMotorstatusQuerschlittenF(EMotorbewegungYAchse.AUS);
-            throw new RuntimeException("Illegale Bits");
+
+        } else {
+            notfallStop();
+            throw new RuntimeException("Illegaler Zustand: (I_11 | I_12)");
         }
     }
 
     @Override
-    public void setMotorstatusWerkzeugAntriebF(EMotorstatus neuerStatus) {
-        if (neuerStatus == EMotorstatus.AN)
+    public synchronized void setMotorstatusWerkzeugAntriebF(EMotorstatus neuerStatus) {
+        if (neuerStatus == EMotorstatus.AN) {
             setOutputBit(Q_14);
 
-        else if (neuerStatus == EMotorstatus.AUS)
+        } else if (neuerStatus == EMotorstatus.AUS) {
             resetOutputBit(Q_14);
 
+        }
         write();
     }
 
     @Override
-    public void setMotorstatusBandF(EMotorstatus neuerStatus) {
+    public synchronized void setMotorstatusBandF(EMotorstatus neuerStatus) {
         if (neuerStatus == EMotorstatus.AN)
             setOutputBit(Q_17);
         else if (neuerStatus == EMotorstatus.AUS)
@@ -492,26 +614,36 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
 
     @Override
     public ESensorstatus initiatorF() {
-        return (read() & I_27) == 0 ? ESensorstatus.SIGNAL : ESensorstatus.KEIN_SIGNAL;
+        return (input & I_27) == 0 ? ESensorstatus.SIGNAL : ESensorstatus.KEIN_SIGNAL;
     }
 
 
-    /************************
-     *  IMMehrspindelmaschine
-     ************************/
+    //************************
+    //*  IMMehrspindelmaschine
+    //************************
 
     @Override
-    public void setMotorstatusHubM(EMotorbewegungZAchse neuerStatus) {
+    public synchronized void setMotorstatusHubM(EMotorbewegungZAchse neuerStatus) {
         if (neuerStatus == EMotorbewegungZAchse.AUS) {
             resetOutputBit(Q_6 | Q_7);
 
         } else if (neuerStatus == EMotorbewegungZAchse.AUF) {
             resetOutputBit(Q_7);
-            setOutputBit(Q_6);
+
+            if (getPositionHubM() == ESensorZAchse.OBEN) {
+                notfallStop();
+                throw new RuntimeException("Illegale Aktion: set Q_6 wenn I_06 aktiv");
+            } else
+                setOutputBit(Q_6);
 
         } else if (neuerStatus == EMotorbewegungZAchse.AB) {
             resetOutputBit(Q_6);
-            setOutputBit(Q_7);
+
+            if (getPositionHubM() == ESensorZAchse.UNTEN) {
+                notfallStop();
+                throw new RuntimeException("Illegale Aktion: set Q_7 wenn I_07 aktiv");
+            } else
+                setOutputBit(Q_7);
 
         }
         write();
@@ -519,57 +651,71 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
 
     @Override
     public ESensorZAchse getPositionHubM() {
-        if ((read() & (I_06 | I_07)) == (I_06 | I_07))
+        int data = input;
+
+        if ((data & (I_06 | I_07)) == (I_06 | I_07)) {
             return ESensorZAchse.DAZWISCHEN;
-        else if ((read() & I_06) == 0)
+
+        } else if ((data & I_06) == 0) {
             return ESensorZAchse.OBEN;
-        else if ((read() & I_07) == 0)
+
+        } else if ((data & I_07) == 0) {
             return ESensorZAchse.UNTEN;
-        else {
-            setMotorstatusHubM(EMotorbewegungZAchse.AUS);
-            throw new RuntimeException("Illegale Bits");
+
+        } else {
+            notfallStop();
+            throw new RuntimeException("Illegaler Zustand: (I_06 | I_07)");
         }
     }
 
     @Override
-    public void setMotorstatusRevolverdrehungM(EMotorstatus neuerStatus) {
-        if (neuerStatus == EMotorstatus.AUS)
+    public synchronized void setMotorstatusRevolverdrehungM(EMotorstatus neuerStatus) {
+        if (neuerStatus == EMotorstatus.AUS) {
             resetOutputBit(Q_8);
-        else if (neuerStatus == EMotorstatus.AN)
+
+        } else if (neuerStatus == EMotorstatus.AN) {
             setOutputBit(Q_8);
+
+        }
         write();
     }
 
     @Override
-    public void setMotorstatusWerkzeugAntriebM(EMotorstatus neuerStatus) {
-        if (neuerStatus == EMotorstatus.AUS)
+    public synchronized void setMotorstatusWerkzeugAntriebM(EMotorstatus neuerStatus) {
+        if (neuerStatus == EMotorstatus.AUS) {
             resetOutputBit(Q_9);
-        else if (neuerStatus == EMotorstatus.AN)
+
+        } else if (neuerStatus == EMotorstatus.AN) {
             setOutputBit(Q_9);
+
+        }
         write();
     }
 
     @Override
-    public void setMotorstatusBandM(EMotorstatus neuerStatus) {
-        if (neuerStatus == EMotorstatus.AUS)
+    public synchronized void setMotorstatusBandM(EMotorstatus neuerStatus) {
+        if (neuerStatus == EMotorstatus.AUS) {
             resetOutputBit(Q_16);
-        else if (neuerStatus == EMotorstatus.AN)
+
+        } else if (neuerStatus == EMotorstatus.AN) {
             setOutputBit(Q_16);
+
+        }
         write();
     }
 
     @Override
     public ESensorstatus revolverPositionMelderM() {
-        return (read() & I_08) == 0 ? ESensorstatus.SIGNAL : ESensorstatus.KEIN_SIGNAL;
+        return (input & I_08) == 0 ? ESensorstatus.SIGNAL : ESensorstatus.KEIN_SIGNAL;
     }
 
     @Override
     public ESensorstatus istAusschleussbahnBelegtM() {
-        return (read() & I_14) == 0 ? ESensorstatus.SIGNAL : ESensorstatus.KEIN_SIGNAL;
+        return (input & I_14) == 0 ? ESensorstatus.SIGNAL : ESensorstatus.KEIN_SIGNAL;
     }
 
     @Override
     public ESensorstatus initiatorM() {
-        return (read() & I_26) == 0 ? ESensorstatus.SIGNAL : ESensorstatus.KEIN_SIGNAL;
+        return (input & I_26) == 0 ? ESensorstatus.SIGNAL : ESensorstatus.KEIN_SIGNAL;
     }
 }

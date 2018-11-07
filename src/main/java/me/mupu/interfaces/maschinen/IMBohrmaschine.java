@@ -8,34 +8,52 @@ import me.mupu.enums.sensoren.ESensorstatus;
 public interface IMBohrmaschine {
 
     /**
-     * (Q_3) Motor-Bohrmaschine Hub auf.
-     * (Q_4) Motor-Bohrmaschine Hub ab.
+     * Versucht den Motorstatus zu setzen.<br></br>
+     * <br></br>
+     *
+     * Setzt (Q_3) Motor-Bohrmaschine Hub auf,
+     * prueft (I_04) ET Bohrmaschine Hubeinheit oben.<br></br>
+     * <br></br>
+     *
+     * Setzt (Q_4) Motor-Bohrmaschine Hub ab,
+     * prueft (I_05) ET Bohrmaschine Hubeinheit unten.
+     *
+     * @param neuerStatus Status den die Maschine einnehmen soll.
+     * @throws RuntimeException wenn Pruefung fehlschlaegt.
      */
     void setMotorstatusHubBm(EMotorbewegungZAchse neuerStatus);
 
     /**
-     * (Q_5) Motor-Bohrmaschine Werkzeug-Antrieb.
+     * Versucht den Status von (Q_5) Motor-Bohrmaschine Werkzeug-Antrieb zu setzen.
+     *
+     * @param neuerStatus Status den die Maschine einnehmen soll.
      */
     void setMotorstatusWerkzeugAntriebBm(EMotorstatus neuerStatus);
 
     /**
-     * (Q_15) Motor-Band Bohrmaschine.
+     * Versucht den Status von (Q_15) Motor-Band Bohrmaschine zu setzen.
+     *
+     * @param neuerStatus Status den die Maschine einnehmen soll.
      */
     void setMotorstatusBandBm(EMotorstatus neuerStatus);
 
     /**
-     * (I_04) ET Bohrmaschine Hubeinheit oben
-     * (I_05) ET Bohrmaschine Hubeinheit unten
+     * Prueft (I_04) ET Bohrmaschine Hubeinheit oben.<br></br>
+     * <br></br>
+     * Prueft (I_05) ET Bohrmaschine Hubeinheit unten.
+     *
+     * @return Gibt die Position der Hubeinheit zurueck.
+     * @throws RuntimeException wenn beide aktiv.
      */
     ESensorZAchse getPositionHubBm();
 
     /**
-     * (I_13) Fotowiderstand Bandstart vor Bohrmaschine
+     * @return Gibt den Status von (I_13) Fotowiderstand Bandstart vor Bohrmaschine.
      */
     ESensorstatus istUebergabestelleVorBohrmaschineBelegtBm();
 
     /**
-     * (I_25) Initiator Bohrmaschine Werkstückposition (ist Werkstueck in Position?)
+     * @return Gibt den Status von (I_25) Initiator Bohrmaschine Werkstückposition (ist Werkstueck in Position?) zurueck.
      */
     ESensorstatus initiatorBm();
 

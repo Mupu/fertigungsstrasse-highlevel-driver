@@ -3,137 +3,137 @@ package me.mupu.interfaces.bitpos;
 public interface IInput {
 
     /**
-     * ET Belegtmeldung Q_Einlegestation
+     * (I_01) ET Belegtmeldung Q_Einlegestation
      */
     int I_01 = 1;
 
     /**
-     * ET Schieber Ausgangslage Einlagestation
+     * (I_02) ET Schieber Ausgangslage Einlagestation (LINKS)
      */
     int I_02 = 1<<1;
 
     /**
-     * ET Schieber Bandposition Einlegestation
+     * (I_03) ET Schieber Bandposition Einlegestation (RECHTS)
      */
     int I_03 = 1<<2;
 
     /**
-     * ET Bohrmaschine Hubeinheit oben
+     * (I_04) ET Bohrmaschine Hubeinheit oben
      */
     int I_04 = 1<<3;
 
     /**
-     * ET Bohrmaschine Hubeinheit unten
+     * (I_05) ET Bohrmaschine Hubeinheit unten
      */
     int I_05 = 1<<4;
 
     /**
-     * ET Mehrspindelmaschine Hubeinheit oben
+     * (I_06) ET Mehrspindelmaschine Hubeinheit oben
      */
     int I_06 = 1<<5;
 
     /**
-     * ET Mehrspindelmaschine Hubeinheit unten
+     * (I_07) ET Mehrspindelmaschine Hubeinheit unten
      */
     int I_07 = 1<<6;
 
 
     /**
-     * ET Mehrspindelmaschine Revolverpositionsmelder
+     * (I_08) ET Mehrspindelmaschine Revolverpositionsmelder
      */
     int I_08 = 1<<7;
 
     /**
-     * ET Fräsmaschine Hubeinheit oben
+     * (I_09) ET Fräsmaschine Hubeinheit oben
      */
     int I_09 = 1<<8;
 
     /**
-     * ET Fräsmaschine Hubeinheit unten
+     * (I_10) ET Fräsmaschine Hubeinheit unten
      */
     int I_10 = 1<<9;
 
     /**
-     * ET Fräsmaschine Querschlitten Bandposition
+     * (I_11) ET Fräsmaschine Querschlitten Bandposition (VORNE)
      */
     int I_11 = 1<<10;
 
     /**
-     * ET Fräsmaschine Querschlitten Ständerposition
+     * (I_12) ET Fräsmaschine Querschlitten Ständerposition (HINTEN)
      */
     int I_12 = 1<<11;
 
     /**
-     * Fotowiderstand Bandstart vor Bohrmaschine
+     * (I_13) Fotowiderstand Bandstart vor Bohrmaschine
      */
     int I_13 = 1<<12;
 
     /**
-     * Fotowiderstand Ausschleusbahn
+     * (I_14) Fotowiderstand Ausschleusbahn
      */
     int I_14 = 1<<13;
 
     // I_15 u. I_16 nicht belegt
 
     /**
-     * ET Xa (RECHTS)
+     * (I_17) ET Xa (RECHTS)
      */
     int I_17 = 1<<16;
 
     /**
-     * ET Xe (LINKS)
+     * (I_18) ET Xe (LINKS)
      */
     int I_18 = 1<<17;
 
     /**
-     * ET Ya (VORNE)
+     * (I_19) ET Ya (VORNE)
      */
     int I_19 = 1<<18;
 
     /**
-     * ET Ye (HINTEN)
+     * (I_20) ET Ye (HINTEN)
      */
     int I_20 = 1<<19;
 
     /**
-     * ET Za (OBEN)
+     * (I_21) ET Za (OBEN)
      */
     int I_21 = 1<<20;
 
     /**
-     * ET Ze (UNTEN)
+     * (I_22) ET Ze (UNTEN)
      */
     int I_22 = 1<<21;
 
     // I_23 u. I_24 nicht belegt
 
     /**
-     * Initiator Bohrmaschine Werkstückposition
+     * (I_25) Initiator Bohrmaschine Werkstückposition (ist Werkstueck in Position?)
      */
     int I_25 = 1<<24;
 
     /**
-     * Initiator Mehrspindelmaschine Werkstückposition
+     * (I_26) Initiator Mehrspindelmaschine Werkstückposition (ist Werkstueck in Position?)
      */
     int I_26 = 1<<25;
 
     /**
-     * Initiator Fräsmaschine Werkstückposition
+     * (I_27) Initiator Fräsmaschine Werkstückposition (ist Werkstueck in Position?)
      */
     int I_27 = 1<<26;
 
     /**
-     * Initiator X-Achse
+     * (I_28) Initiator X-Achse
      */
     int I_28 = 1<<27;
 
     /**
-     * Initiator Y-Achse
+     * I_29 Initiator Y-Achse
      */
     int I_29 = 1<<28;
 
     /**
-     * Initiator Z-Achse
+     * I_30 Initiator Z-Achse
      */
     int I_30 = 1<<29;
 
