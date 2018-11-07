@@ -194,8 +194,15 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
         }
     }
 
+    /**
+     * @param object Object das getestet werden soll
+     * @throws RuntimeException wenn object NULL ist
+     */
+    private void throwErrorIfNull(Object object) { // todo testen ob program beendet wird
+        notfallStop();
+        throw new RuntimeException("Wrong Input: Parameter darf nicht NULL sein!");
+    }
 
-    // todo model hinzufuegen (band logik)
     // 1 = werkstueck; 0 = kein werkstueck
 
     //  x ~> y = x braucht initiator-werkstueck-sensor von Y
@@ -213,7 +220,9 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
     //      (0)       0     0       1      (0)
     //      (0)       0     0       0      (1)
 
+    // todo update old tests
     // todo add synchronized check testclass
+    // todo add fertigungsstrassen tests
     // todo zimmer fragen wegen vor rueck z.B. Setzt (Q_12) Motor-Fraesmaschine Querschlitten rueck, prueft (I_12) ET Fräsmaschine Querschlitten Ständerposition (HINTEN).
 
     //************************
@@ -221,6 +230,8 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
     //************************
     @Override
     public synchronized void setMotorstatusSchieberS(EMotorbewegungXAchse neuerStatus) {
+        throwErrorIfNull(neuerStatus);
+
         if (neuerStatus == EMotorbewegungXAchse.AUS) {
             resetOutputBit(Q_1 | Q_2);
 
@@ -290,6 +301,8 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
     //************************
     @Override
     public synchronized void setMotorstatusXAchseK(EMotorbewegungXAchse neuerStatus) {
+        throwErrorIfNull(neuerStatus);
+
         if (neuerStatus == EMotorbewegungXAchse.AUS) {
             resetOutputBit(Q_18 | Q_19);
 
@@ -336,6 +349,8 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
 
     @Override
     public synchronized void setMotorstatusYAchseK(EMotorbewegungYAchse neuerStatus) {
+        throwErrorIfNull(neuerStatus);
+
         if (neuerStatus == EMotorbewegungYAchse.AUS) {
             resetOutputBit(Q_20 | Q_21);
 
@@ -381,6 +396,8 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
 
     @Override
     public synchronized void setMotorstatusZAchseK(EMotorbewegungZAchse neuerStatus) {
+        throwErrorIfNull(neuerStatus);
+
         if (neuerStatus == EMotorbewegungZAchse.AUS) {
             resetOutputBit(Q_22 | Q_23);
 
@@ -427,6 +444,8 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
 
     @Override
     public synchronized void setMotorstatusMagnetK(EMotorstatus neuerStatus) {
+        throwErrorIfNull(neuerStatus);
+
         if (neuerStatus == EMotorstatus.AUS) {
             resetOutputBit(Q_24);
 
@@ -468,6 +487,8 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
     //************************
     @Override
     public synchronized void setMotorstatusHubBm(EMotorbewegungZAchse neuerStatus) {
+        throwErrorIfNull(neuerStatus);
+
         if (neuerStatus == EMotorbewegungZAchse.AUS) {
             resetOutputBit(Q_3 | Q_4);
 
@@ -514,6 +535,8 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
 
     @Override
     public synchronized void setMotorstatusWerkzeugAntriebBm(EMotorstatus neuerStatus) {
+        throwErrorIfNull(neuerStatus);
+
         if (neuerStatus == EMotorstatus.AUS) {
             resetOutputBit(Q_5);
 
@@ -526,6 +549,8 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
 
     @Override
     public synchronized void setMotorstatusBandBm(EMotorstatus neuerStatus) {
+        throwErrorIfNull(neuerStatus);
+
         if (neuerStatus == EMotorstatus.AUS) {
             resetOutputBit(Q_15);
 
@@ -568,6 +593,8 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
 
     @Override
     public synchronized void setMotorstatusHubM(EMotorbewegungZAchse neuerStatus) {
+        throwErrorIfNull(neuerStatus);
+
         if (neuerStatus == EMotorbewegungZAchse.AUS) {
             resetOutputBit(Q_6 | Q_7);
 
@@ -614,6 +641,8 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
 
     @Override
     public synchronized void setMotorstatusRevolverdrehungM(EMotorstatus neuerStatus) {
+        throwErrorIfNull(neuerStatus);
+
         if (neuerStatus == EMotorstatus.AUS) {
             resetOutputBit(Q_8);
 
@@ -626,6 +655,8 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
 
     @Override
     public synchronized void setMotorstatusWerkzeugAntriebM(EMotorstatus neuerStatus) {
+        throwErrorIfNull(neuerStatus);
+
         if (neuerStatus == EMotorstatus.AUS) {
             resetOutputBit(Q_9);
 
@@ -638,6 +669,8 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
 
     @Override
     public synchronized void setMotorstatusBandM(EMotorstatus neuerStatus) {
+        throwErrorIfNull(neuerStatus);
+
         if (neuerStatus == EMotorstatus.AUS) {
             resetOutputBit(Q_16);
 
@@ -679,6 +712,8 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
     //************************
     @Override
     public synchronized void setMotorstatusHubF(EMotorbewegungZAchse neuerStatus) {
+        throwErrorIfNull(neuerStatus);
+
         if (neuerStatus == EMotorbewegungZAchse.AUS) {
             resetOutputBit(Q_10 | Q_11);
 
@@ -725,6 +760,8 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
 
     @Override
     public synchronized void setMotorstatusQuerschlittenF(EMotorbewegungYAchse neuerStatus) {
+        throwErrorIfNull(neuerStatus);
+
         if (neuerStatus == EMotorbewegungYAchse.AUS) {
             resetOutputBit(Q_12 | Q_13);
 
@@ -772,6 +809,8 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
 
     @Override
     public synchronized void setMotorstatusWerkzeugAntriebF(EMotorstatus neuerStatus) {
+        throwErrorIfNull(neuerStatus);
+
         if (neuerStatus == EMotorstatus.AN) {
             setOutputBit(Q_14);
 
@@ -784,6 +823,8 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
 
     @Override
     public synchronized void setMotorstatusBandF(EMotorstatus neuerStatus) {
+        throwErrorIfNull(neuerStatus);
+
         if (neuerStatus == EMotorstatus.AN)
             setOutputBit(Q_17);
         else if (neuerStatus == EMotorstatus.AUS)
