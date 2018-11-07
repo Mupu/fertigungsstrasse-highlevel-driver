@@ -18,6 +18,10 @@ import java.io.IOException;
 import static me.mupu.interfaces.bitpos.IOutput.*;
 import static me.mupu.interfaces.bitpos.IInput.*;
 
+/**
+ * Die Highlevel-Treiberklasse des USB-Interfaces für die Fertigungsstrasse.
+ * Bietet die Schnittstellen zum Arbeiten mit der Fertigungsstrasse.
+ */
 public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBohrmaschine, IMFraesmaschine, IMSchieber {
 
     // DEBUG
@@ -42,6 +46,7 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
 
     /**
      * Versucht USB-Interface zu oeffnen.
+     * Erstellt einen ReadingThread der den input des USB-Interfaces zyclisch ausliesst.
      */
     // todo maybe open & close methode ?
     private FertigungsstrasseHLD() {
@@ -185,20 +190,24 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
     }
 
 
-    // todo flags hinzufügen ÜBERDENKEN (band login hinzufügen)
-    //  1 = kann annehmen 0 = kann nicht annehmen <- setzen die maschinen selber
-    // (M1)(M2)(M3) (Ausgabe)
-    //  1   1   1   (1) <-- () = ausschleuse (kran muss ihn abholen)
-    //  0   1   1   (1)
-    //  1   0   1   (1)     nach unten hin die zeit
-    //  0   0   1   (1)
-    //  0   1   0   (1)
-    //  1   0   0   (1)             das ganze ist mit warten bis platz frei ist
-    //  1   0   1   (0)             könnte auch simultan teil wegschieben und neues annehmen
-    //  1   1   0   (0)
-    //  1   1   0   (0)
-    //  1   1   1   (0)
-    //  1   1   1   (1)
+    // todo model hinzufuegen (band logik)
+    // 1 = werkstueck; 0 = kein werkstueck
+
+    //  x ~> y = x braucht initiator-werkstueck-sensor von Y
+    //            ~>     ~>    ~>      ~>
+
+    //  x <~ y = y braucht will-abgeben-flag von x
+    //            <~     <~    <~
+
+    //  - = braucht ein will abgeben flag
+    //       -        -     -
+    //      (S)      (B)   (M)     (F)    (Ausgabe)
+    //      (1)       0     0       0      (0)
+    //      (0)       1     0       0      (0)
+    //      (0)       0     1       0      (0)
+    //      (0)       0     0       1      (0)
+    //      (0)       0     0       0      (1)
+
     // todo add synchronized check testclass
     // todo zimmer fragen wegen vor rueck z.B. Setzt (Q_12) Motor-Fraesmaschine Querschlitten rueck, prueft (I_12) ET Fräsmaschine Querschlitten Ständerposition (HINTEN).
 
