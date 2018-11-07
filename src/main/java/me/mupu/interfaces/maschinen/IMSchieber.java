@@ -44,4 +44,16 @@ public interface IMSchieber {
      * @return Gibt den Status von (I_13) Fotowiderstand Bandstart vor Bohrmaschine zurueck.
      */
     ESensorstatus istUebergabestelleVorBohrmaschineBelegtS();
+
+    /**
+     * @return Gibt den Status von (I_25) Initiator Bohrmaschine Werkstückposition (ist Werkstueck in Position?) zurueck.
+     */
+    ESensorstatus istBohrmaschineBelegtS();
+
+    /**
+     * Zeigt der folgenden Maschine an, dass diese das Werkstueck weitergeben will.
+     *
+     * @param neuerWert Wert den der Flag haben soll.
+     */
+    void setFlagWillWerkstueckAbgebenS(boolean neuerWert);
 }

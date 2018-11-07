@@ -44,6 +44,11 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
     private static int READ_DELAY = 0;
     private Thread readingThread;
 
+
+    private boolean flagWillWerkstueckAbgebenS = false;
+    private boolean flagWillWerkstueckAbgebenB = false;
+    private boolean flagWillWerkstueckAbgebenM = false;
+
     /**
      * Versucht USB-Interface zu oeffnen.
      * Erstellt einen ReadingThread der den input des USB-Interfaces zyclisch ausliesst.
@@ -270,6 +275,15 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
         return (input & I_13) == 0 ? ESensorstatus.SIGNAL : ESensorstatus.KEIN_SIGNAL;
     }
 
+    @Override
+    public ESensorstatus istBohrmaschineBelegtS() {
+        return (input & I_25) == 0 ? ESensorstatus.SIGNAL : ESensorstatus.KEIN_SIGNAL;
+    }
+
+    @Override
+    public void setFlagWillWerkstueckAbgebenS(boolean neuerWert) {
+        flagWillWerkstueckAbgebenS = neuerWert;
+    }
 
     //************************
     //*  IKran
@@ -523,6 +537,21 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
     }
 
     @Override
+    public ESensorstatus istMehrspindelmaschineBelegtB() {
+        return (input & I_26) == 0 ? ESensorstatus.SIGNAL : ESensorstatus.KEIN_SIGNAL;
+    }
+
+    @Override
+    public ESensorstatus sollWerkstueckAnnehmenB() {
+        return flagWillWerkstueckAbgebenS ? ESensorstatus.SIGNAL : ESensorstatus.KEIN_SIGNAL;
+    }
+
+    @Override
+    public void setFlagWillWerkstueckAbgebenB(boolean neuerWert) {
+        flagWillWerkstueckAbgebenB = neuerWert;
+    }
+
+    @Override
     public ESensorstatus istUebergabestelleVorBohrmaschineBelegtBm() {
         return (input & I_13) == 0 ? ESensorstatus.SIGNAL : ESensorstatus.KEIN_SIGNAL;
     }
@@ -530,6 +559,118 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
     @Override
     public ESensorstatus initiatorBm() {
         return (input & I_25) == 0 ? ESensorstatus.SIGNAL : ESensorstatus.KEIN_SIGNAL;
+    }
+
+
+    //************************
+    //*  IMMehrspindelmaschine
+    //************************
+
+    @Override
+    public synchronized void setMotorstatusHubM(EMotorbewegungZAchse neuerStatus) {
+        if (neuerStatus == EMotorbewegungZAchse.AUS) {
+            resetOutputBit(Q_6 | Q_7);
+
+        } else if (neuerStatus == EMotorbewegungZAchse.AUF) {
+            resetOutputBit(Q_7);
+
+            if (getPositionHubM() == ESensorZAchse.OBEN) {
+                notfallStop();
+                throw new RuntimeException("Illegale Aktion: set Q_6 wenn I_06 aktiv");
+            } else
+                setOutputBit(Q_6);
+
+        } else if (neuerStatus == EMotorbewegungZAchse.AB) {
+            resetOutputBit(Q_6);
+
+            if (getPositionHubM() == ESensorZAchse.UNTEN) {
+                notfallStop();
+                throw new RuntimeException("Illegale Aktion: set Q_7 wenn I_07 aktiv");
+            } else
+                setOutputBit(Q_7);
+
+        }
+        write();
+    }
+
+    @Override
+    public ESensorZAchse getPositionHubM() {
+        int data = input & (I_06 | I_07); // maske
+
+        if (data == (I_06 | I_07)) {
+            return ESensorZAchse.DAZWISCHEN;
+
+        } else if (data == I_07) {
+            return ESensorZAchse.OBEN;
+
+        } else if (data == I_06) {
+            return ESensorZAchse.UNTEN;
+
+        } else {
+            notfallStop();
+            throw new RuntimeException("Illegaler Zustand: (I_06 | I_07)");
+        }
+    }
+
+    @Override
+    public synchronized void setMotorstatusRevolverdrehungM(EMotorstatus neuerStatus) {
+        if (neuerStatus == EMotorstatus.AUS) {
+            resetOutputBit(Q_8);
+
+        } else if (neuerStatus == EMotorstatus.AN) {
+            setOutputBit(Q_8);
+
+        }
+        write();
+    }
+
+    @Override
+    public synchronized void setMotorstatusWerkzeugAntriebM(EMotorstatus neuerStatus) {
+        if (neuerStatus == EMotorstatus.AUS) {
+            resetOutputBit(Q_9);
+
+        } else if (neuerStatus == EMotorstatus.AN) {
+            setOutputBit(Q_9);
+
+        }
+        write();
+    }
+
+    @Override
+    public synchronized void setMotorstatusBandM(EMotorstatus neuerStatus) {
+        if (neuerStatus == EMotorstatus.AUS) {
+            resetOutputBit(Q_16);
+
+        } else if (neuerStatus == EMotorstatus.AN) {
+            setOutputBit(Q_16);
+
+        }
+        write();
+    }
+
+    @Override
+    public ESensorstatus istRevolverAufPositionM() {
+        return (input & I_08) == 0 ? ESensorstatus.SIGNAL : ESensorstatus.KEIN_SIGNAL;
+    }
+
+    @Override
+    public ESensorstatus istFraesmaschineBelegtM() {
+        return (input & I_27) == 0 ? ESensorstatus.SIGNAL : ESensorstatus.KEIN_SIGNAL;
+    }
+
+    @Override
+    public ESensorstatus sollWerkstueckAnnehmenM() {
+        return flagWillWerkstueckAbgebenB ? ESensorstatus.SIGNAL : ESensorstatus.KEIN_SIGNAL;
+    }
+
+    @Override
+    public void setFlagWillWerkstueckAbgebenM(boolean neuerWert) {
+        flagWillWerkstueckAbgebenM = neuerWert;
+    }
+
+    @Override
+    public ESensorstatus initiatorM() {
+        return (input & I_26) == 0 ? ESensorstatus.SIGNAL : ESensorstatus.KEIN_SIGNAL;
     }
 
 
@@ -651,109 +792,17 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
     }
 
     @Override
-    public ESensorstatus initiatorF() {
-        return (input & I_27) == 0 ? ESensorstatus.SIGNAL : ESensorstatus.KEIN_SIGNAL;
-    }
-
-
-    //************************
-    //*  IMMehrspindelmaschine
-    //************************
-
-    @Override
-    public synchronized void setMotorstatusHubM(EMotorbewegungZAchse neuerStatus) {
-        if (neuerStatus == EMotorbewegungZAchse.AUS) {
-            resetOutputBit(Q_6 | Q_7);
-
-        } else if (neuerStatus == EMotorbewegungZAchse.AUF) {
-            resetOutputBit(Q_7);
-
-            if (getPositionHubM() == ESensorZAchse.OBEN) {
-                notfallStop();
-                throw new RuntimeException("Illegale Aktion: set Q_6 wenn I_06 aktiv");
-            } else
-                setOutputBit(Q_6);
-
-        } else if (neuerStatus == EMotorbewegungZAchse.AB) {
-            resetOutputBit(Q_6);
-
-            if (getPositionHubM() == ESensorZAchse.UNTEN) {
-                notfallStop();
-                throw new RuntimeException("Illegale Aktion: set Q_7 wenn I_07 aktiv");
-            } else
-                setOutputBit(Q_7);
-
-        }
-        write();
-    }
-
-    @Override
-    public ESensorZAchse getPositionHubM() {
-        int data = input & (I_06 | I_07); // maske
-
-        if (data == (I_06 | I_07)) {
-            return ESensorZAchse.DAZWISCHEN;
-
-        } else if (data == I_07) {
-            return ESensorZAchse.OBEN;
-
-        } else if (data == I_06) {
-            return ESensorZAchse.UNTEN;
-
-        } else {
-            notfallStop();
-            throw new RuntimeException("Illegaler Zustand: (I_06 | I_07)");
-        }
-    }
-
-    @Override
-    public synchronized void setMotorstatusRevolverdrehungM(EMotorstatus neuerStatus) {
-        if (neuerStatus == EMotorstatus.AUS) {
-            resetOutputBit(Q_8);
-
-        } else if (neuerStatus == EMotorstatus.AN) {
-            setOutputBit(Q_8);
-
-        }
-        write();
-    }
-
-    @Override
-    public synchronized void setMotorstatusWerkzeugAntriebM(EMotorstatus neuerStatus) {
-        if (neuerStatus == EMotorstatus.AUS) {
-            resetOutputBit(Q_9);
-
-        } else if (neuerStatus == EMotorstatus.AN) {
-            setOutputBit(Q_9);
-
-        }
-        write();
-    }
-
-    @Override
-    public synchronized void setMotorstatusBandM(EMotorstatus neuerStatus) {
-        if (neuerStatus == EMotorstatus.AUS) {
-            resetOutputBit(Q_16);
-
-        } else if (neuerStatus == EMotorstatus.AN) {
-            setOutputBit(Q_16);
-
-        }
-        write();
-    }
-
-    @Override
-    public ESensorstatus revolverPositionMelderM() {
-        return (input & I_08) == 0 ? ESensorstatus.SIGNAL : ESensorstatus.KEIN_SIGNAL;
-    }
-
-    @Override
-    public ESensorstatus istAusschleussbahnBelegtM() {
+    public ESensorstatus istAusschleussbahnBelegtF() {
         return (input & I_14) == 0 ? ESensorstatus.SIGNAL : ESensorstatus.KEIN_SIGNAL;
     }
 
     @Override
-    public ESensorstatus initiatorM() {
-        return (input & I_26) == 0 ? ESensorstatus.SIGNAL : ESensorstatus.KEIN_SIGNAL;
+    public ESensorstatus sollWerkstueckAnnehmenF() {
+        return flagWillWerkstueckAbgebenM ? ESensorstatus.SIGNAL : ESensorstatus.KEIN_SIGNAL;
+    }
+
+    @Override
+    public ESensorstatus initiatorF() {
+        return (input & I_27) == 0 ? ESensorstatus.SIGNAL : ESensorstatus.KEIN_SIGNAL;
     }
 }

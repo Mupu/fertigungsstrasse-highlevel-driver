@@ -51,6 +51,25 @@ public interface IMBohrmaschine {
     ESensorZAchse getPositionHubBm();
 
     /**
+     * @return Gibt den Status von (I_26) Initiator Mehrspindelmaschine Werkstückposition (ist Werkstueck in Position?) zurueck.
+     */
+    ESensorstatus istMehrspindelmaschineBelegtB();
+
+    /**
+     * Zeigt an, ob die vorherige Maschine ihr Werkstueck abgeben will.
+     *
+     * @return Gibt den Flag des Schiebers zurueck.
+     */
+    ESensorstatus sollWerkstueckAnnehmenB();
+
+    /**
+     * Zeigt der Mehrspindelmaschine an, dass diese das Werkstueck weitergeben will.
+     *
+     * @param neuerWert Wert den der Flag haben soll.
+     */
+    void setFlagWillWerkstueckAbgebenB(boolean neuerWert);
+
+    /**
      * @return Gibt den Status von (I_13) Fotowiderstand Bandstart vor Bohrmaschine.
      */
     ESensorstatus istUebergabestelleVorBohrmaschineBelegtBm();

@@ -129,14 +129,14 @@
 //    }
 //
 //    @Test
-//    void revolverPositionMelderM() {
+//    void istRevolverAufPositionM() {
 //        // AN
 //        usb.setIn(I_08);
-//        assertTrue(mehrspindelmaschine.revolverPositionMelderM());
+//        assertTrue(mehrspindelmaschine.istRevolverAufPositionM());
 //
 //        // AUS
 //        beforeEach();
-//        assertFalse(mehrspindelmaschine.revolverPositionMelderM());
+//        assertFalse(mehrspindelmaschine.istRevolverAufPositionM());
 //    }
 //
 //    @Test

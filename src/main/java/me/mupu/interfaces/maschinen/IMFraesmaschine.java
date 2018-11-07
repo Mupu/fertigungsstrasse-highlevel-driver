@@ -79,6 +79,18 @@ public interface IMFraesmaschine {
     void setMotorstatusBandF(EMotorstatus neuerStatus);
 
     /**
+     * @return Gibt den Status von (I_14) Fotowiderstand Ausschleusbahn zurueck.
+     */
+    ESensorstatus istAusschleussbahnBelegtF();
+
+    /**
+     * Zeigt an, ob die vorherige Maschine ihr Werkstueck abgeben will.
+     *
+     * @return Gibt den Flag der Mehrspindelmaschine zurueck.
+     */
+    ESensorstatus sollWerkstueckAnnehmenF();
+
+    /**
      * @return Gibt den Status von (I_27) Initiator Bohrmaschine Werkstückposition (ist Werkstueck in Position?) zurueck.
      */
     ESensorstatus initiatorF();

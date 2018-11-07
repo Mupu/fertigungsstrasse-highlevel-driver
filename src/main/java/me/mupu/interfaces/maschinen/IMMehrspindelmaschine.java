@@ -60,12 +60,26 @@ public interface IMMehrspindelmaschine {
     /**
      * @return Gibt den Status von (I_08) ET Mehrspindelmaschine Revolverpositionsmelder zurueck.
      */
-    ESensorstatus revolverPositionMelderM();
+    ESensorstatus istRevolverAufPositionM();
 
     /**
-     * @return Gibt den Status von (I_14) Fotowiderstand Ausschleusbahn zurueck.
+     * @return Gibt den Status von (I_27) Initiator Fräsmaschine Werkstückposition (ist Werkstueck in Position?) zurueck.
      */
-    ESensorstatus istAusschleussbahnBelegtM();
+    ESensorstatus istFraesmaschineBelegtM();
+
+    /**
+     * Zeigt an, ob die vorherige Maschine ihr Werkstueck abgeben will.
+     *
+     * @return Gibt den Flag der Bohrmaschine zurueck.
+     */
+    ESensorstatus sollWerkstueckAnnehmenM();
+
+    /**
+     * Zeigt der Fraesmaschine an, dass diese das Werkstueck weitergeben will.
+     *
+     * @param neuerWert Wert den der Flag haben soll.
+     */
+    void setFlagWillWerkstueckAbgebenM(boolean neuerWert);
 
     /**
      * @return Gibt den Status von (I_26) Initiator Bohrmaschine Werkstückposition (ist Werkstueck in Position?) zurueck.
