@@ -1,40 +1,50 @@
 package me.mupu.interfaces.maschinen;
 
+import me.mupu.enums.motorbewegungen.EMotorbewegungYAchse;
+import me.mupu.enums.motorbewegungen.EMotorbewegungZAchse;
+import me.mupu.enums.motorbewegungen.EMotorstatus;
+import me.mupu.enums.sensoren.ESensorYAchse;
+import me.mupu.enums.sensoren.ESensorZAchse;
+import me.mupu.enums.sensoren.ESensorstatus;
+
 public interface IMFraesmaschine {
 
-    enum Q_HubF {
-        AUF, AB, AUS
-    }
+    /**
+     * (Q_10) Motor-Fraesmaschine Hub auf.
+     * (Q_11) Motor-Fraesmaschine Hub ab.
+     */
+    void setMotorstatusHubF(EMotorbewegungZAchse neuerStatus);
 
-    enum Q_QuerschlittenF {
-        RUECK, VOR, AUS
-    }
+    /**
+     * (I_09) ET Fräsmaschine Hubeinheit oben
+     * (I_10) ET Fräsmaschine Hubeinheit unten
+     */
+    ESensorZAchse getPositionHubF();
 
-    enum WerkzeugAntriebF {
-        AN, AUS
-    }
+    /**
+     * (Q_12) Motor-Fraesmaschine Querschlitten rueck.
+     * (Q_13) Motor-Fraesmaschine Querschlitten vor.
+     */
+    void setMotorstatusQuerschlittenF(EMotorbewegungYAchse neuerStatus);
 
-    enum BandF {
-        AN, AUS
-    }
+    /**
+     * (I_11) ET Fräsmaschine Querschlitten vorne
+     * (I_12) ET Fräsmaschine Querschlitten hinten
+     */
+    ESensorYAchse getPositionQuerschlittenF();
 
-    enum I_HubF {
-        OBEN, UNTEN, DAZWISCHEN
-    }
+    /**
+     * (Q_14) Motor-Fraesmaschine Werkzeug-Antrieb.
+     */
+    void setMotorstatusWerkzeugAntriebF(EMotorstatus neuerStatus);
 
-    enum I_QuerschlittenF {
-        BANDPOSITION, STAENDERPOSITION, DAZWISCHEN
-    }
+    /**
+     * (Q_17) Motor-Band Fraesmaschine.
+     */
+    void setMotorstatusBandF(EMotorstatus neuerStatus);
 
-    void setStatusHubF(Q_HubF neuerStatus);
-    I_HubF getStatusHubF();
-
-    void setStatusQuerschlittenF(Q_QuerschlittenF neuerStatus);
-    I_QuerschlittenF getStatusQuerschlittenF();
-
-    void setStatusWerkzeugAntriebF(WerkzeugAntriebF neuerStatus);
-
-    void setStatusBandF(BandF neuerStatus);
-
-    boolean initiatorF();
+    /**
+     * (I_27) Initiator Bohrmaschine Werkstückposition (ist Werkstueck in Position?)
+     */
+    ESensorstatus initiatorF();
 }

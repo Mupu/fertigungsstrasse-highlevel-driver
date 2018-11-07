@@ -1,43 +1,51 @@
 package me.mupu.interfaces.maschinen;
 
+import me.mupu.enums.motorbewegungen.EMotorbewegungZAchse;
+import me.mupu.enums.motorbewegungen.EMotorstatus;
+import me.mupu.enums.sensoren.ESensorZAchse;
+import me.mupu.enums.sensoren.ESensorstatus;
+
 public interface IMMehrspindelmaschine {
 
-    enum Q_HubM {
-        AUF, AB, AUS
-    }
+    /**
+     * (Q_6) Motor-Mehrspindelmaschine Hub auf.
+     * (Q_7) Motor-Mehrspindelmaschine Hub ab.
+     */
+    void setMotorstatusHubM(EMotorbewegungZAchse neuerStatus);
 
-    enum RevolverdrehungM {
-        AN, AUS
-    }
+    /**
+     * (I_06) ET Mehrspindelmaschine Hubeinheit oben
+     * (I_07) ET Mehrspindelmaschine Hubeinheit unten
+     */
+    ESensorZAchse getPositionHubM();
 
-    enum WerkzeugAntriebM {
-        AN, AUS
-    }
+    /**
+     * (Q_8) Motor-Mehrspindelmaschine Revolverdrehung.
+     */
+    void setMotorstatusRevolverdrehungM(EMotorstatus neuerStatus);
 
-    enum BandM {
-        AN, AUS
-    }
+    /**
+     * (Q_9) Motor-Mehrspindelmaschine Werkzeug-Antrieb.
+     */
+    void setMotorstatusWerkzeugAntriebM(EMotorstatus neuerStatus);
 
-    enum I_HubM {
-        OBEN, UNTEN, DAZWISCHEN
-    }
+    /**
+     * (Q_16) Motor-Band Mehrspindelmaschine.
+     */
+    void setMotorstatusBandM(EMotorstatus neuerStatus);
 
-    enum I_AusschleussbahnM {
-        BELEGT, NICHT_BELEGT
-    }
+    /**
+     * (I_08) ET Mehrspindelmaschine Revolverpositionsmelder
+     */
+    ESensorstatus revolverPositionMelderM();
 
-    void setStatusHubM(Q_HubM neuerStatus);
-    I_HubM getStatusHubM();
+    /**
+     * (I_14) Fotowiderstand Ausschleusbahn
+     */
+    ESensorstatus istAusschleussbahnBelegtM();
 
-    void setStatusRevolverdrehungM(RevolverdrehungM neuerStatus);
-
-    void setStatusWerkzeugAntriebM(WerkzeugAntriebM neuerStatus);
-
-    void setStatusBandM(BandM neuerStatus);
-
-    boolean revolverPositionMelderM();
-
-    I_AusschleussbahnM istAusschleussbahnBelegtM();
-
-    boolean initiatorM();
+    /**
+     * (I_26) Initiator Bohrmaschine Werkstückposition (ist Werkstueck in Position?)
+     */
+    ESensorstatus initiatorM();
 }

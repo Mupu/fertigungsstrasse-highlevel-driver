@@ -18,6 +18,9 @@ public interface IMSchieber {
      */
     ESensorXAchse getPositionSchieberS();
 
+    /**
+     * (I_01) ET Belegtmeldung Q_Einlegestation
+     */
     ESensorstatus istEinlegestationBelegtS();
 
     /**

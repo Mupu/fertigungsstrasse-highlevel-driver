@@ -7,13 +7,26 @@ import me.mupu.enums.sensoren.ESensorstatus;
 
 public interface IMBohrmaschine {
 
-
+    /**
+     * (Q_3) Motor-Bohrmaschine Hub auf.
+     * (Q_4) Motor-Bohrmaschine Hub ab.
+     */
     void setMotorstatusHubBm(EMotorbewegungZAchse neuerStatus);
 
+    /**
+     * (Q_5) Motor-Bohrmaschine Werkzeug-Antrieb.
+     */
     void setMotorstatusWerkzeugAntriebBm(EMotorstatus neuerStatus);
 
+    /**
+     * (Q_15) Motor-Band Bohrmaschine.
+     */
     void setMotorstatusBandBm(EMotorstatus neuerStatus);
 
+    /**
+     * (I_04) ET Bohrmaschine Hubeinheit oben
+     * (I_05) ET Bohrmaschine Hubeinheit unten
+     */
     ESensorZAchse getPositionHubBm();
 
     /**
@@ -22,9 +35,8 @@ public interface IMBohrmaschine {
     ESensorstatus istUebergabestelleVorBohrmaschineBelegtBm();
 
     /**
-     * (I_25) Initiator Bohrmaschine Werkstückposition
+     * (I_25) Initiator Bohrmaschine Werkstückposition (ist Werkstueck in Position?)
      */
-    // todo ist das hubinitiator ?
     ESensorstatus initiatorBm();
 
 }

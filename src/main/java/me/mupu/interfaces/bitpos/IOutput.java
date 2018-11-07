@@ -3,12 +3,12 @@ package me.mupu.interfaces.bitpos;
 public interface IOutput {
 
     /**
-     * Motor-Schieber Einlegestation vor.
+     * Motor-Schieber Einlegestation vor. (RECHTS)
      */
     int Q_1 = 1;
 
     /**
-     * Motor-Schieber Einlegestation rueck.
+     * Motor-Schieber Einlegestation rueck. (LINKS)
      */
     int Q_2 = 1<<1;
 
