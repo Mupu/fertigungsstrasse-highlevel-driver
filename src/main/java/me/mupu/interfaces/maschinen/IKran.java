@@ -9,6 +9,9 @@ import me.mupu.enums.sensoren.ESensorYAchse;
 import me.mupu.enums.sensoren.ESensorZAchse;
 import me.mupu.enums.sensoren.ESensorstatus;
 
+/**
+ * Dieses interface ist die Schnittstelle fuer die Kran-Gruppe.
+ */
 public interface IKran {
 
     /**

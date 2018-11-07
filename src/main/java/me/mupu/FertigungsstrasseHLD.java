@@ -24,18 +24,19 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
     public static FertigungsstrasseHLD instance;
     public final UsbOptoRel32 usbInterface;
     public int output = 0; // default alle aus
-    public int input = ~0; // default alle aus
+    public int input;
 
     // RELEASE
     //    private static FertigungsstrasseHLD instance;
     //    private final UsbOptoRel32 usbInterface;
     //    private int output = 0; // default alle aus
 
-    //    /**
-    //     * Bei Benutzung sollte eine locale kopie erstellt werden,
-    //     * da sich diese Variable verändern kann.
-    //     */
-    //private int input = ~0; // default alle aus
+//    /**
+//     * Bei Benutzung sollte eine locale kopie erstellt werden,
+//     * da sich diese Variable verändern kann.<br></br>
+//     * input ist invertiert: Default 111111.... und nicht 000000...
+//     */
+//    private int input;
     private static int READ_DELAY = 0;
     private Thread readingThread;
 
@@ -70,9 +71,20 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
         // todo initial state ?
     }
 
+    /**
+     * Eine Klasse, die alle benoetigten Methoden bereitstellt.
+     *
+     * @return Gibt die Schnittstelle fuer die Schieber-Gruppe zurueck.
+     */
+    public static IMSchieber getSchieber() {
+        if (instance == null)
+            instance = new FertigungsstrasseHLD();
+        return instance;
+    }
 
     /**
      * Eine Klasse, die alle benoetigten Methoden bereitstellt.
+     *
      * @return Gibt die Schnittstelle fuer die Kran-Gruppe zurueck.
      */
     public static IKran getKran() {
@@ -83,6 +95,7 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
 
     /**
      * Eine Klasse, die alle benoetigten Methoden bereitstellt.
+     *
      * @return Gibt die Schnittstelle fuer die Bohrmaschinen-Gruppe zurueck.
      */
     public static IMBohrmaschine getBohrmaschine() {
@@ -93,6 +106,7 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
 
     /**
      * Eine Klasse, die alle benoetigten Methoden bereitstellt.
+     *
      * @return Gibt die Schnittstelle fuer die Fraesmaschinen-Gruppe zurueck.
      */
     public static IMFraesmaschine getFraesmaschine() {
@@ -103,6 +117,7 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
 
     /**
      * Eine Klasse, die alle benoetigten Methoden bereitstellt.
+     *
      * @return Gibt die Schnittstelle fuer die Mehrspindelmaschinen-Gruppe zurueck.
      */
     public static IMMehrspindelmaschine getMehrspindelmaschine() {
@@ -111,15 +126,6 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
         return instance;
     }
 
-    /**
-     * Eine Klasse, die alle benoetigten Methoden bereitstellt.
-     * @return Gibt die Schnittstelle fuer die Schieber-Gruppe zurueck.
-     */
-    public static IMSchieber getSchieber() {
-        if (instance == null)
-            instance = new FertigungsstrasseHLD();
-        return instance;
-    }
 
     /**
      * Versucht alle output-bits auf 'aus' zu setzen.
@@ -179,7 +185,6 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
     }
 
 
-    // todo add synchronized check testclass
     // todo flags hinzufügen ÜBERDENKEN (band login hinzufügen)
     //  1 = kann annehmen 0 = kann nicht annehmen <- setzen die maschinen selber
     // (M1)(M2)(M3) (Ausgabe)
@@ -194,6 +199,7 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
     //  1   1   0   (0)
     //  1   1   1   (0)
     //  1   1   1   (1)
+    // todo add synchronized check testclass
     // todo zimmer fragen wegen vor rueck z.B. Setzt (Q_12) Motor-Fraesmaschine Querschlitten rueck, prueft (I_12) ET Fräsmaschine Querschlitten Ständerposition (HINTEN).
 
     //************************

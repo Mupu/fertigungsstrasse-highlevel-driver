@@ -5,6 +5,9 @@ import me.mupu.enums.motorbewegungen.EMotorstatus;
 import me.mupu.enums.sensoren.ESensorZAchse;
 import me.mupu.enums.sensoren.ESensorstatus;
 
+/**
+ * Dieses interface ist die Schnittstelle fuer die Mehrspindelmaschinen-Gruppe.
+ */
 public interface IMMehrspindelmaschine {
 
     /**

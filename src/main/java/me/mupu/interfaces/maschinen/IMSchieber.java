@@ -4,6 +4,9 @@ import me.mupu.enums.motorbewegungen.EMotorbewegungXAchse;
 import me.mupu.enums.sensoren.ESensorXAchse;
 import me.mupu.enums.sensoren.ESensorstatus;
 
+/**
+ * Dieses interface ist die Schnittstelle fuer die Schieber-Gruppe.
+ */
 public interface IMSchieber {
 
     /**

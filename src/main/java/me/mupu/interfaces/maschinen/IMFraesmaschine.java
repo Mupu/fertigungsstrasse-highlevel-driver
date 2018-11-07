@@ -7,6 +7,9 @@ import me.mupu.enums.sensoren.ESensorYAchse;
 import me.mupu.enums.sensoren.ESensorZAchse;
 import me.mupu.enums.sensoren.ESensorstatus;
 
+/**
+ * Dieses interface ist die Schnittstelle fuer die Fraesmaschinen-Gruppe.
+ */
 public interface IMFraesmaschine {
 
     /**
