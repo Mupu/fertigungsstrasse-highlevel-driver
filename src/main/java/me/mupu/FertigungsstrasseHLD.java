@@ -27,22 +27,20 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
     public int input = ~0; // default alle aus
 
     // RELEASE
-//    private static FertigungsstrasseHLD instance;
-//    private final UsbOptoRel32 usbInterface;
-//    private int output = 0; // default alle aus
+    //    private static FertigungsstrasseHLD instance;
+    //    private final UsbOptoRel32 usbInterface;
+    //    private int output = 0; // default alle aus
 
     //    /**
-//     * Bei Benutzung sollte eine locale kopie erstellt werden,
-//     * da sich diese Variable verändern kann.
-//     */
-//    private int input = ~0; // default alle aus
+    //     * Bei Benutzung sollte eine locale kopie erstellt werden,
+    //     * da sich diese Variable verändern kann.
+    //     */
+    //private int input = ~0; // default alle aus
     private static int READ_DELAY = 0;
     private Thread readingThread;
 
     /**
      * Versucht USB-Interface zu oeffnen.
-     *
-     * @throws RuntimeException
      */
     // todo maybe open & close methode ?
     private FertigungsstrasseHLD() {
@@ -73,30 +71,50 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
     }
 
 
+    /**
+     * Eine Klasse, die alle benoetigten Methoden bereitstellt.
+     * @return Gibt die Schnittstelle fuer die Kran-Gruppe zurueck.
+     */
     public static IKran getKran() {
         if (instance == null)
             instance = new FertigungsstrasseHLD();
         return instance;
     }
 
+    /**
+     * Eine Klasse, die alle benoetigten Methoden bereitstellt.
+     * @return Gibt die Schnittstelle fuer die Bohrmaschinen-Gruppe zurueck.
+     */
     public static IMBohrmaschine getBohrmaschine() {
         if (instance == null)
             instance = new FertigungsstrasseHLD();
         return instance;
     }
 
+    /**
+     * Eine Klasse, die alle benoetigten Methoden bereitstellt.
+     * @return Gibt die Schnittstelle fuer die Fraesmaschinen-Gruppe zurueck.
+     */
     public static IMFraesmaschine getFraesmaschine() {
         if (instance == null)
             instance = new FertigungsstrasseHLD();
         return instance;
     }
 
+    /**
+     * Eine Klasse, die alle benoetigten Methoden bereitstellt.
+     * @return Gibt die Schnittstelle fuer die Mehrspindelmaschinen-Gruppe zurueck.
+     */
     public static IMMehrspindelmaschine getMehrspindelmaschine() {
         if (instance == null)
             instance = new FertigungsstrasseHLD();
         return instance;
     }
 
+    /**
+     * Eine Klasse, die alle benoetigten Methoden bereitstellt.
+     * @return Gibt die Schnittstelle fuer die Schieber-Gruppe zurueck.
+     */
     public static IMSchieber getSchieber() {
         if (instance == null)
             instance = new FertigungsstrasseHLD();
@@ -115,11 +133,11 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
     }
 
     /**
-     * Setzt einen delay für den aufruf der usbInterface-digitalIn Methode fest.
-     * 0 = kein Delay.
+     * Setzt einen delay für den Aufruf der USB-Interface-digitalIn Methode fest.<br></br>
+     * 0 = kein Delay.<br></br>
      * Default ist 0.
      *
-     * @param readDelay - in Millisekunden
+     * @param readDelay Zeit in Millisekunden
      */
     public static void setReadDelay(int readDelay) {
         FertigungsstrasseHLD.READ_DELAY = readDelay;
@@ -128,6 +146,8 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
 
     /**
      * Setzt die Bits.
+     *
+     * @param mask Maske
      */
     private void setOutputBit(int mask) {
         this.output |= mask;
@@ -136,6 +156,8 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
 
     /**
      * Setzt die Bits zurueck.
+     *
+     * @param mask Maske
      */
     private void resetOutputBit(int mask) {
         this.output &= ~mask;
@@ -143,7 +165,7 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
 
 
     /**
-     * Gibt den output ueber das USB-Interface aus.
+     * Gibt den output ueber das USB-Interface an die Maschinen weiter.
      *
      * @throws RuntimeException wenn USB-Interface nicht erreichbar ist
      */
@@ -157,7 +179,6 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
     }
 
 
-    // todo error bei falschen I_.. zb: I_21 | I_22 <-- get methoden
     // todo add synchronized check testclass
     // todo flags hinzufügen ÜBERDENKEN (band login hinzufügen)
     //  1 = kann annehmen 0 = kann nicht annehmen <- setzen die maschinen selber
@@ -207,14 +228,15 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
 
     @Override
     public ESensorXAchse getPositionSchieberS() {
-        int data = input;
-        if ((data & (I_02 | I_03)) == (I_02 | I_03)) {
+        int data = input & (I_02 | I_03); // maske
+
+        if (data == (I_02 | I_03)) {
             return ESensorXAchse.DAZWISCHEN;
 
-        } else if ((data & I_02) == 0) {
+        } else if (data == I_03) {
             return ESensorXAchse.LINKS;
 
-        } else if ((data & I_03) == 0) {
+        } else if (data == I_02) {
             return ESensorXAchse.RECHTS;
 
         } else {
@@ -266,15 +288,15 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
 
     @Override
     public ESensorXAchse getPositionXAchseK() {
-        int data = input;
+        int data = input & (I_17 | I_18); // maske
 
-        if ((data & (I_17 | I_18)) == (I_17 | I_18)) {
+        if (data == (I_17 | I_18)) {
             return ESensorXAchse.DAZWISCHEN;
 
-        } else if ((data & I_17) == 0) {
+        } else if (data == I_18) {
             return ESensorXAchse.RECHTS;
 
-        } else if ((data & I_18) == 0) {
+        } else if (data == I_17) {
             return ESensorXAchse.LINKS;
 
         } else {
@@ -312,15 +334,15 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
 
     @Override
     public ESensorYAchse getPositionYAchseK() {
-        int data = input;
+        int data = input & (I_19 | I_20); // maske
 
-        if ((data & (I_19 | I_20)) == (I_19 | I_20)) {
+        if (data == (I_19 | I_20)) {
             return ESensorYAchse.DAZWISCHEN;
 
-        } else if ((data & I_19) == 0) {
+        } else if (data == I_20) {
             return ESensorYAchse.VORNE;
 
-        } else if ((data & I_20) == 0) {
+        } else if (data == I_19) {
             return ESensorYAchse.HINTEN;
 
         } else {
@@ -357,15 +379,16 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
 
     @Override
     public ESensorZAchse getPositionZAchseK() {
-        int data = input;
+        int data = input & (I_21 | I_22); // maske
 
-        if ((data & (I_21 | I_22)) == (I_21 | I_22)) {
+
+        if (data == (I_21 | I_22)) {
             return ESensorZAchse.DAZWISCHEN;
 
-        } else if ((data & (I_21 | I_22)) == I_22) {  // 21 geschaltet aber 22 nicht // todo nochmal anschauen
+        } else if (data == I_22) {
             return ESensorZAchse.OBEN;
 
-        } else if ((data & (I_22 | I_21)) == I_21) {  // 22 geschaltet aber 21 nicht
+        } else if (data == I_21) {
             return ESensorZAchse.UNTEN;
 
         } else {
@@ -443,15 +466,15 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
 
     @Override
     public ESensorZAchse getPositionHubBm() {
-        int data = input;
+        int data = input & (I_04 | I_05); // maske
 
-        if ((data & (I_04 | I_05)) == (I_04 | I_05)) {
+        if (data == (I_04 | I_05)) {
             return ESensorZAchse.DAZWISCHEN;
 
-        } else if ((data & I_04) == 0) {
+        } else if (data == I_04) {
             return ESensorZAchse.UNTEN;
 
-        } else if ((data & I_05) == 0) {
+        } else if (data == I_05) {
             return ESensorZAchse.OBEN;
 
         } else {
@@ -527,15 +550,15 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
 
     @Override
     public ESensorZAchse getPositionHubF() {
-        int data = input;
+        int data = input & (I_09 | I_10); // maske
 
-        if ((data & (I_09 | I_10)) == (I_09 | I_10)) {
+        if (data == (I_09 | I_10)) {
             return ESensorZAchse.DAZWISCHEN;
 
-        } else if ((data & I_09) == 0) {
+        } else if (data == I_10) {
             return ESensorZAchse.OBEN;
 
-        } else if ((data & I_10) == 0) {
+        } else if (data == I_09) {
             return ESensorZAchse.UNTEN;
 
         } else {
@@ -574,15 +597,15 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
 
     @Override
     public ESensorYAchse getPositionQuerschlittenF() {
-        int data = input;
+        int data = input & (I_11 | I_12); // maske
 
-        if ((data & (I_11 | I_12)) == (I_11 | I_12)) {
+        if (data == (I_11 | I_12)) {
             return ESensorYAchse.DAZWISCHEN;
 
-        } else if ((data & I_11) == 0) {
+        } else if (data == I_12) {
             return ESensorYAchse.VORNE;
 
-        } else if ((data & I_12) == 0) {
+        } else if (data == I_11) {
             return ESensorYAchse.HINTEN;
 
         } else {
@@ -651,15 +674,15 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
 
     @Override
     public ESensorZAchse getPositionHubM() {
-        int data = input;
+        int data = input & (I_06 | I_07); // maske
 
-        if ((data & (I_06 | I_07)) == (I_06 | I_07)) {
+        if (data == (I_06 | I_07)) {
             return ESensorZAchse.DAZWISCHEN;
 
-        } else if ((data & I_06) == 0) {
+        } else if (data == I_07) {
             return ESensorZAchse.OBEN;
 
-        } else if ((data & I_07) == 0) {
+        } else if (data == I_06) {
             return ESensorZAchse.UNTEN;
 
         } else {
