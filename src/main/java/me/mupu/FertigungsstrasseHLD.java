@@ -1,8 +1,8 @@
 package me.mupu;
 
-//import quancom.UsbOptoRel32; // RELEASE
+import quancom.UsbOptoRel32; // RELEASE
+//import me.mupu._testUsbInterface.UsbOptoRel32; // DEBUG
 
-import me.mupu._testUsbInterface.UsbOptoRel32; // DEBUG
 import me.mupu.enums.motorbewegungen.EMotorbewegungYAchse;
 import me.mupu.enums.motorbewegungen.EMotorbewegungZAchse;
 import me.mupu.enums.motorbewegungen.EMotorbewegungXAchse;
@@ -23,24 +23,49 @@ import static me.mupu.interfaces.bitpos.IInput.*;
  * Bietet die Schnittstellen zum Arbeiten mit der Fertigungsstrasse.
  */
 public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBohrmaschine, IMFraesmaschine, IMSchieber {
+    // 1 = werkstueck; 0 = kein werkstueck
+
+    //  x ~> y = x braucht initiator-werkstueck-sensor von Y
+    //            ~>     ~>    ~>      ~>
+
+    //  x <~ y = y braucht will-abgeben-flag von x
+    //            <~     <~    <~
+
+    //  - = braucht ein will abgeben flag
+    //       -        -     -
+    //      (S)      (B)   (M)     (F)    (Ausgabe)
+    //      (1)       0     0       0      (0)
+    //      (0)       1     0       0      (0)
+    //      (0)       0     1       0      (0)
+    //      (0)       0     0       1      (0)
+    //      (0)       0     0       0      (1)
+
+    // todo add synchronized check testclass
+
+
 
     // DEBUG
-    public static FertigungsstrasseHLD instance;
-    public final UsbOptoRel32 usbInterface;
-    public volatile int output;
-    public volatile int input;
+//    public static FertigungsstrasseHLD instance;
+//    public final UsbOptoRel32 usbInterface;
+//    public volatile int output;
+//    public volatile int input;
 
     // RELEASE
     //    private static FertigungsstrasseHLD instance;
     //    private final UsbOptoRel32 usbInterface;
     //    private int output; // vielleicht volatile ?
 
-    //    /**
-//     * Bei Benutzung sollte eine locale kopie erstellt werden,
-//     * da sich diese Variable verändern kann.<br></br>
-//     * input ist invertiert: Default 111111.... und nicht 000000...
-//     */
-//    private int input; // vielleicht volatile ?
+        /**
+     * Bei Benutzung sollte eine locale kopie erstellt werden,
+     * da sich diese Variable verändern kann.<br></br>
+     * input ist invertiert: Default 111111.... und nicht 000000...
+     */
+    private int input; // vielleicht volatile ?
+    private int output; // vielleicht volatile ?
+
+    private final UsbOptoRel32 usbInterface;
+
+    private static FertigungsstrasseHLD instance;
     private static int READ_DELAY = 0;
     private Thread readingThread;
 
@@ -219,26 +244,7 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
         }
     }
 
-    // 1 = werkstueck; 0 = kein werkstueck
 
-    //  x ~> y = x braucht initiator-werkstueck-sensor von Y
-    //            ~>     ~>    ~>      ~>
-
-    //  x <~ y = y braucht will-abgeben-flag von x
-    //            <~     <~    <~
-
-    //  - = braucht ein will abgeben flag
-    //       -        -     -
-    //      (S)      (B)   (M)     (F)    (Ausgabe)
-    //      (1)       0     0       0      (0)
-    //      (0)       1     0       0      (0)
-    //      (0)       0     1       0      (0)
-    //      (0)       0     0       1      (0)
-    //      (0)       0     0       0      (1)
-
-    // todo update old tests
-    // todo add synchronized check testclass
-    // todo add fertigungsstrassen tests
 
     //************************
     //*  IMSchieber
