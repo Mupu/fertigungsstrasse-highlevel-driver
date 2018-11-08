@@ -13,7 +13,11 @@ import me.mupu.enums.sensoren.ESensorZAchse;
 import me.mupu.enums.sensoren.ESensorstatus;
 import me.mupu.interfaces.maschinen.*;
 
+
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 
 import static me.mupu.interfaces.bitpos.IOutput.*;
 import static me.mupu.interfaces.bitpos.IInput.*;
@@ -43,7 +47,6 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
     // todo add synchronized check testclass
 
 
-
     // DEBUG
 //    public static FertigungsstrasseHLD instance;
 //    public final UsbOptoRel32 usbInterface;
@@ -55,7 +58,7 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
     //    private final UsbOptoRel32 usbInterface;
     //    private int output; // vielleicht volatile ?
 
-        /**
+    /**
      * Bei Benutzung sollte eine locale kopie erstellt werden,
      * da sich diese Variable verändern kann.<br></br>
      * input ist invertiert: Default 111111.... und nicht 000000...
@@ -74,13 +77,37 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
     private boolean flagWillWerkstueckAbgebenB = false;
     private boolean flagWillWerkstueckAbgebenM = false;
 
-
+    /**
+     * Erstellt die dll und das USB-Interface.
+     */
     private FertigungsstrasseHLD() {
+        erstelleDLLWennNichtVorhanden();
 
         usbInterface = new UsbOptoRel32();
         output = 0; // default alles aus
-
     }
+
+    /**
+     * Erstellt die DLL wenn sie noch nicht vorhanden ist.
+     */
+    private void erstelleDLLWennNichtVorhanden() {
+        try {
+            final File tempFile = new File("Qlib32.dll");
+            if (tempFile.createNewFile()) {
+                final FileOutputStream fos = new FileOutputStream(tempFile);
+                final InputStream is = getClass().getClassLoader().getResourceAsStream("Qlib32.dll");
+                int n;
+                final byte buffer[] = new byte[4096];
+                while (-1 != (n = is.read(buffer))) {
+                    fos.write(buffer, 0, n);
+                    fos.flush();
+                }
+                is.close();
+                fos.close();
+            }
+        } catch (Exception ignored){}
+    }
+
 
     /**
      * Eine Klasse, die alle benoetigten Methoden bereitstellt.
@@ -243,7 +270,6 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
             throw new RuntimeException("Wrong Input: Parameter darf nicht NULL sein!");
         }
     }
-
 
 
     //************************
