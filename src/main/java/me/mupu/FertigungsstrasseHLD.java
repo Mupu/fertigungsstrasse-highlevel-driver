@@ -27,20 +27,20 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
     // DEBUG
     public static FertigungsstrasseHLD instance;
     public final UsbOptoRel32 usbInterface;
-    public int output = 0; // default alle aus
-    public int input;
+    public volatile int output;
+    public volatile int input;
 
     // RELEASE
     //    private static FertigungsstrasseHLD instance;
     //    private final UsbOptoRel32 usbInterface;
-    //    private int output = 0; // default alle aus
+    //    private int output; // vielleicht volatile ?
 
-//    /**
+    //    /**
 //     * Bei Benutzung sollte eine locale kopie erstellt werden,
 //     * da sich diese Variable verändern kann.<br></br>
 //     * input ist invertiert: Default 111111.... und nicht 000000...
 //     */
-//    private int input;
+//    private int input; // vielleicht volatile ?
     private static int READ_DELAY = 0;
     private Thread readingThread;
 
@@ -49,36 +49,12 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
     private boolean flagWillWerkstueckAbgebenB = false;
     private boolean flagWillWerkstueckAbgebenM = false;
 
-    /**
-     * Versucht USB-Interface zu oeffnen.
-     * Erstellt einen ReadingThread der den input des USB-Interfaces zyclisch ausliesst.
-     */
-    // todo maybe open & close methode ?
+
     private FertigungsstrasseHLD() {
 
         usbInterface = new UsbOptoRel32();
+        output = 0; // default alles aus
 
-        if (!usbInterface.open())
-            throw new RuntimeException("Quancom Verbindung konnte nicht hergestellt werden!");
-
-
-        readingThread = new Thread(() -> {
-            while (true) {
-                try {
-                    if (READ_DELAY != 0) {
-                        Thread.sleep(READ_DELAY); // todo testen ob funktioniert
-                    }
-                    input = usbInterface.digitalIn();
-                } catch (Exception e) {
-                    notfallStop();
-                    System.exit(1); // todo testen ?
-                    throw new RuntimeException("Interface nicht mehr erreichbar!");
-                }
-            }
-        });
-        readingThread.start();
-
-        // todo initial state ?
     }
 
     /**
@@ -136,16 +112,54 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
         return instance;
     }
 
+    /**
+     * Versucht USB-Interface zu oeffnen.
+     * Erstellt einen ReadingThread der den input des USB-Interfaces zyclisch ausliesst.
+     */
+    public static void open() {
+        if (instance == null)
+            instance = new FertigungsstrasseHLD();
+
+        if (!instance.usbInterface.open())
+            throw new RuntimeException("Quancom Verbindung konnte nicht hergestellt werden!");
+
+        if (instance.readingThread != null)
+            instance.readingThread.stop();
+
+        instance.readingThread = new Thread(() -> {
+            while (true) {
+                try {
+                    if (READ_DELAY > 0) {
+                        Thread.sleep(READ_DELAY);
+                    }
+                    instance.input = instance.usbInterface.digitalIn();
+                } catch (Exception e) {
+                    close();
+                    throw new RuntimeException("Interface nicht mehr erreichbar!");
+                }
+            }
+        });
+        instance.readingThread.start();
+    }
 
     /**
-     * Versucht alle output-bits auf 'aus' zu setzen.
-     * Beendet nicht den readingThread.
+     * Versucht alle output-Bits auf 'AUS' zu setzten.
+     * Danach wird versucht das USB-Interface zu schliessen und
+     * den ReadingThread zu beenden.
      */
-    public static void notfallStop() { // todo testen
+    public static void close() {
+        if (instance == null)
+            instance = new FertigungsstrasseHLD();
+
+        if (instance.readingThread != null)
+            instance.readingThread.stop();
+
         try {
             instance.usbInterface.digitalOut(0);
         } catch (Exception ignored) {
         }
+
+        instance.usbInterface.close();
     }
 
     /**
@@ -189,7 +203,7 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
         try {
             usbInterface.digitalOut(output);
         } catch (IOException e) {
-            e.printStackTrace();
+            close();
             throw new RuntimeException("Interface nicht mehr erreichbar!");
         }
     }
@@ -199,8 +213,10 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
      * @throws RuntimeException wenn object NULL ist
      */
     private void throwErrorIfNull(Object object) { // todo testen ob program beendet wird
-        notfallStop();
-        throw new RuntimeException("Wrong Input: Parameter darf nicht NULL sein!");
+        if (object == null) {
+            close();
+            throw new RuntimeException("Wrong Input: Parameter darf nicht NULL sein!");
+        }
     }
 
     // 1 = werkstueck; 0 = kein werkstueck
@@ -223,7 +239,6 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
     // todo update old tests
     // todo add synchronized check testclass
     // todo add fertigungsstrassen tests
-    // todo zimmer fragen wegen vor rueck z.B. Setzt (Q_12) Motor-Fraesmaschine Querschlitten rueck, prueft (I_12) ET Fräsmaschine Querschlitten Ständerposition (HINTEN).
 
     //************************
     //*  IMSchieber
@@ -239,7 +254,7 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
             resetOutputBit(Q_2);
 
             if (getPositionSchieberS() == ESensorXAchse.RECHTS) {
-                notfallStop();
+                close();
                 throw new RuntimeException("Illegale Aktion: set Q_1 wenn I_03 aktiv");
             } else
                 setOutputBit(Q_1);
@@ -248,7 +263,7 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
             resetOutputBit(Q_1);
 
             if (getPositionSchieberS() == ESensorXAchse.LINKS) {
-                notfallStop();
+                close();
                 throw new RuntimeException("Illegale Aktion: set Q_2 wenn I_02 aktiv");
             } else
                 setOutputBit(Q_2);
@@ -271,7 +286,7 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
             return ESensorXAchse.RECHTS;
 
         } else {
-            notfallStop();
+            close();
             throw new RuntimeException("Illegaler Zustand: (I_02 | I_03)");
         }
     }
@@ -310,7 +325,7 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
             resetOutputBit(Q_18);
 
             if (getPositionXAchseK() == ESensorXAchse.LINKS) {
-                notfallStop();
+                close();
                 throw new RuntimeException("Illegale Aktion: set Q_19 wenn I_18 aktiv");
             } else
                 setOutputBit(Q_19);
@@ -319,7 +334,7 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
             resetOutputBit(Q_19);
 
             if (getPositionXAchseK() == ESensorXAchse.RECHTS) {
-                notfallStop();
+                close();
                 throw new RuntimeException("Illegale Aktion: set Q_18 wenn I_17 aktiv");
             } else
                 setOutputBit(Q_18);
@@ -342,7 +357,7 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
             return ESensorXAchse.LINKS;
 
         } else {
-            notfallStop();
+            close();
             throw new RuntimeException("Illegaler Zustand: (I_17 | I_18)");
         }
     }
@@ -358,7 +373,7 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
             resetOutputBit(Q_21);
 
             if (getPositionYAchseK() == ESensorYAchse.VORNE) {
-                notfallStop();
+                close();
                 throw new RuntimeException("Illegale Aktion: set Q_20 wenn I_19 aktiv");
             } else
                 setOutputBit(Q_20);
@@ -367,7 +382,7 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
             resetOutputBit(Q_20);
 
             if (getPositionYAchseK() == ESensorYAchse.HINTEN) {
-                notfallStop();
+                close();
                 throw new RuntimeException("Illegale Aktion: set Q_21 wenn I_20 aktiv");
             } else
                 setOutputBit(Q_21);
@@ -390,6 +405,7 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
             return ESensorYAchse.HINTEN;
 
         } else {
+            close();
             throw new RuntimeException("Illegaler Zustand: (I_19 | I_20)");
         }
     }
@@ -405,7 +421,7 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
             resetOutputBit(Q_23);
 
             if (getPositionZAchseK() == ESensorZAchse.OBEN) {
-                notfallStop();
+                close();
                 throw new RuntimeException("Illegale Aktion: set Q_22 wenn I_21 aktiv");
             } else
                 setOutputBit(Q_22);
@@ -414,7 +430,7 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
             resetOutputBit(Q_22);
 
             if (getPositionZAchseK() == ESensorZAchse.UNTEN) {
-                notfallStop();
+                close();
                 throw new RuntimeException("Illegale Aktion: set Q_23 wenn I_22 aktiv");
             } else
                 setOutputBit(Q_23);
@@ -438,6 +454,7 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
             return ESensorZAchse.UNTEN;
 
         } else {
+            close();
             throw new RuntimeException("Illegaler Zustand: (I_21 | I_22)");
         }
     }
@@ -496,7 +513,7 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
             resetOutputBit(Q_4);
 
             if (getPositionHubBm() == ESensorZAchse.OBEN) {
-                notfallStop();
+                close();
                 throw new RuntimeException("Illegale Aktion: set Q_3 wenn I_04 aktiv");
             } else
                 setOutputBit(Q_3);
@@ -505,7 +522,7 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
             resetOutputBit(Q_3);
 
             if (getPositionHubBm() == ESensorZAchse.UNTEN) {
-                notfallStop();
+                close();
                 throw new RuntimeException("Illegale Aktion: set Q_4 wenn I_05 aktiv");
             } else
                 setOutputBit(Q_4);
@@ -528,7 +545,7 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
             return ESensorZAchse.OBEN;
 
         } else {
-            notfallStop();
+            close();
             throw new RuntimeException("Illegaler Zustand: (I_04 | I_05)");
         }
     }
@@ -602,7 +619,7 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
             resetOutputBit(Q_7);
 
             if (getPositionHubM() == ESensorZAchse.OBEN) {
-                notfallStop();
+                close();
                 throw new RuntimeException("Illegale Aktion: set Q_6 wenn I_06 aktiv");
             } else
                 setOutputBit(Q_6);
@@ -611,7 +628,7 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
             resetOutputBit(Q_6);
 
             if (getPositionHubM() == ESensorZAchse.UNTEN) {
-                notfallStop();
+                close();
                 throw new RuntimeException("Illegale Aktion: set Q_7 wenn I_07 aktiv");
             } else
                 setOutputBit(Q_7);
@@ -634,7 +651,7 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
             return ESensorZAchse.UNTEN;
 
         } else {
-            notfallStop();
+            close();
             throw new RuntimeException("Illegaler Zustand: (I_06 | I_07)");
         }
     }
@@ -721,7 +738,7 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
             resetOutputBit(Q_11);
 
             if (getPositionHubF() == ESensorZAchse.OBEN) {
-                notfallStop();
+                close();
                 throw new RuntimeException("Illegale Aktion: set Q_10 wenn I_09 aktiv");
             } else
                 setOutputBit(Q_10);
@@ -730,7 +747,7 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
             resetOutputBit(Q_10);
 
             if (getPositionHubF() == ESensorZAchse.UNTEN) {
-                notfallStop();
+                close();
                 throw new RuntimeException("Illegale Aktion: set Q_11 wenn I_10 aktiv");
             } else
                 setOutputBit(Q_11);
@@ -753,7 +770,7 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
             return ESensorZAchse.UNTEN;
 
         } else {
-            notfallStop();
+            close();
             throw new RuntimeException("Illegaler Zustand: (I_09 | I_10)");
         }
     }
@@ -769,7 +786,7 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
             resetOutputBit(Q_12);
 
             if (getPositionQuerschlittenF() == ESensorYAchse.VORNE) {
-                notfallStop();
+                close();
                 throw new RuntimeException("Illegale Aktion: set Q_13 wenn I_11 aktiv");
             } else
                 setOutputBit(Q_13);
@@ -778,7 +795,7 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
             resetOutputBit(Q_13);
 
             if (getPositionQuerschlittenF() == ESensorYAchse.HINTEN) {
-                notfallStop();
+                close();
                 throw new RuntimeException("Illegale Aktion: set Q_12 wenn I_12 aktiv");
             } else
                 setOutputBit(Q_12);
@@ -802,7 +819,7 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
             return ESensorYAchse.HINTEN;
 
         } else {
-            notfallStop();
+            close();
             throw new RuntimeException("Illegaler Zustand: (I_11 | I_12)");
         }
     }

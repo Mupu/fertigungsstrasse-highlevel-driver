@@ -1,5 +1,7 @@
 package me.mupu._testUsbInterface;
 
+import me.mupu.FertigungsstrasseHLD;
+
 import java.io.IOException;
 
 public class UsbOptoRel32 {
@@ -8,7 +10,11 @@ public class UsbOptoRel32 {
         return true;
     }
 
+    public void close() {
+    }
+
     public int in = 0;
+    public int out = 0;
 
     public int digitalIn() throws IOException {
         return in;
@@ -16,8 +22,12 @@ public class UsbOptoRel32 {
 
     public void setIn(int in) {
         this.in = ~in;
+
+        // instantly update
+        FertigungsstrasseHLD.instance.input = ~in;
     }
 
     public void digitalOut(int data) throws IOException {
+        out = data;
     }
 }
