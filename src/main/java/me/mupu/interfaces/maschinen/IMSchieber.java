@@ -10,12 +10,12 @@ import me.mupu.enums.sensoren.ESensorstatus;
 public interface IMSchieber {
 
     /**
-     * Versucht den Motorstatus zu setzen.<br></br>
-     * <br></br>
+     * Versucht den Motorstatus zu setzen.<br>
+     * <br>
      * 
      * Setzt (Q_1) Motor-Schieber Einlegestation vor (RECHTS),
-     * prueft (I_03) ET Schieber Bandposition Einlegestation (RECHTS).<br></br>
-     * <br></br>
+     * prueft (I_03) ET Schieber Bandposition Einlegestation (RECHTS).<br>
+     * <br>
      *
      * Setzt (Q_2) Motor-Schieber Einlegestation rueck (LINKS),
      * prueft (I_02) ET Schieber Ausgangslage Einlagestation (LINKS).
@@ -26,8 +26,8 @@ public interface IMSchieber {
     void setMotorstatusSchieberS(EMotorbewegungXAchse neuerStatus);
 
     /**
-     * Prueft (I_02) ET Schieber Ausgangslage Einlagestation (LINKS).<br></br>
-     * <br></br>
+     * Prueft (I_02) ET Schieber Ausgangslage Einlagestation (LINKS).<br>
+     * <br>
      * Prueft (I_03) ET Schieber Bandposition Einlegestation (RECHTS).
      *
      * @return Gibt die Position des Schiebers zurueck.
@@ -46,7 +46,7 @@ public interface IMSchieber {
     ESensorstatus istUebergabestelleVorBohrmaschineBelegtS();
 
     /**
-     * @return Gibt den Status von (I_25) Initiator Bohrmaschine Werkstückposition (ist Werkstueck in Position?) zurueck.
+     * @return Gibt den Status von (I_25) Initiator Bohrmaschine Werkstueckposition (ist Werkstueck in Position?) zurueck.
      */
     ESensorstatus istBohrmaschineBelegtS();
 

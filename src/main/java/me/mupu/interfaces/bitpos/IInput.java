@@ -44,22 +44,22 @@ public interface IInput {
     int I_08 = 1<<7;
 
     /**
-     * (I_09) ET Fräsmaschine Hubeinheit oben
+     * (I_09) ET Fraesmaschine Hubeinheit oben
      */
     int I_09 = 1<<8;
 
     /**
-     * (I_10) ET Fräsmaschine Hubeinheit unten
+     * (I_10) ET Fraesmaschine Hubeinheit unten
      */
     int I_10 = 1<<9;
 
     /**
-     * (I_11) ET Fräsmaschine Querschlitten Bandposition (VORNE)
+     * (I_11) ET Fraesmaschine Querschlitten Bandposition (VORNE)
      */
     int I_11 = 1<<10;
 
     /**
-     * (I_12) ET Fräsmaschine Querschlitten Ständerposition (HINTEN)
+     * (I_12) ET Fraesmaschine Querschlitten Staenderposition (HINTEN)
      */
     int I_12 = 1<<11;
 
@@ -108,17 +108,17 @@ public interface IInput {
     // I_23 u. I_24 nicht belegt
 
     /**
-     * (I_25) Initiator Bohrmaschine Werkstückposition (ist Werkstueck in Position?)
+     * (I_25) Initiator Bohrmaschine Werkstueckposition (ist Werkstueck in Position?)
      */
     int I_25 = 1<<24;
 
     /**
-     * (I_26) Initiator Mehrspindelmaschine Werkstückposition (ist Werkstueck in Position?)
+     * (I_26) Initiator Mehrspindelmaschine Werkstueckposition (ist Werkstueck in Position?)
      */
     int I_26 = 1<<25;
 
     /**
-     * (I_27) Initiator Fräsmaschine Werkstückposition (ist Werkstueck in Position?)
+     * (I_27) Initiator Fraesmaschine Werkstueckposition (ist Werkstueck in Position?)
      */
     int I_27 = 1<<26;
 

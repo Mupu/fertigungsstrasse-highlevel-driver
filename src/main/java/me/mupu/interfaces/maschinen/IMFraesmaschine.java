@@ -13,15 +13,15 @@ import me.mupu.enums.sensoren.ESensorstatus;
 public interface IMFraesmaschine {
 
     /**
-     * Versucht den Motorstatus zu setzen.<br></br>
-     * <br></br>
+     * Versucht den Motorstatus zu setzen.<br>
+     * <br>
      *
      * Setzt (Q_10) Motor-Fraesmaschine Hub auf,
-     * prueft (I_09) ET Fräsmaschine Hubeinheit oben.<br></br>
-     * <br></br>
+     * prueft (I_09) ET Fraesmaschine Hubeinheit oben.<br>
+     * <br>
      *
      * Setzt (Q_11) Motor-Fraesmaschine Hub ab,
-     * prueft (I_10) ET Fräsmaschine Hubeinheit unten.
+     * prueft (I_10) ET Fraesmaschine Hubeinheit unten.
      *
      * @param neuerStatus Status den die Maschine einnehmen soll.
      * @throws RuntimeException wenn Pruefung fehlschlaegt.
@@ -29,9 +29,9 @@ public interface IMFraesmaschine {
     void setMotorstatusHubF(EMotorbewegungZAchse neuerStatus);
 
     /**
-     * Prueft (I_09) ET Fräsmaschine Hubeinheit oben.<br></br>
-     * <br></br>
-     * Prueft (I_10) ET Fräsmaschine Hubeinheit unten.
+     * Prueft (I_09) ET Fraesmaschine Hubeinheit oben.<br>
+     * <br>
+     * Prueft (I_10) ET Fraesmaschine Hubeinheit unten.
      *
      * @return Gibt die Position der Hubeinheit zurueck.
      * @throws RuntimeException wenn beide aktiv.
@@ -39,15 +39,15 @@ public interface IMFraesmaschine {
     ESensorZAchse getPositionHubF();
 
     /**
-     * Versucht den Motorstatus zu setzen.<br></br>
-     * <br></br>
+     * Versucht den Motorstatus zu setzen.<br>
+     * <br>
      *
      * Setzt (Q_12) Motor-Fraesmaschine Querschlitten rueck,
-     * prueft (I_12) ET Fräsmaschine Querschlitten Ständerposition (HINTEN).<br></br>
-     * <br></br>
+     * prueft (I_12) ET Fraesmaschine Querschlitten Staenderposition (HINTEN).<br>
+     * <br>
      *
      * Setzt (Q_13) Motor-Fraesmaschine Querschlitten vor,
-     * prueft (I_11) ET Fräsmaschine Querschlitten Bandposition (VORNE).
+     * prueft (I_11) ET Fraesmaschine Querschlitten Bandposition (VORNE).
      *
      * @param neuerStatus Status den die Maschine einnehmen soll.
      * @throws RuntimeException wenn Pruefung fehlschlaegt.
@@ -55,9 +55,9 @@ public interface IMFraesmaschine {
     void setMotorstatusQuerschlittenF(EMotorbewegungYAchse neuerStatus);
 
     /**
-     * Prueft (I_11) ET Fräsmaschine Querschlitten vorne.<br></br>
-     * <br></br>
-     * Prueft (I_12) ET Fräsmaschine Querschlitten hinten.
+     * Prueft (I_11) ET Fraesmaschine Querschlitten vorne.<br>
+     * <br>
+     * Prueft (I_12) ET Fraesmaschine Querschlitten hinten.
      *
      * @return Gibt die Position des Querschlitten zurueck.
      * @throws RuntimeException wenn beide aktiv.
@@ -91,7 +91,7 @@ public interface IMFraesmaschine {
     ESensorstatus sollWerkstueckAnnehmenF();
 
     /**
-     * @return Gibt den Status von (I_27) Initiator Bohrmaschine Werkstückposition (ist Werkstueck in Position?) zurueck.
+     * @return Gibt den Status von (I_27) Initiator Bohrmaschine Werkstueckposition (ist Werkstueck in Position?) zurueck.
      */
     ESensorstatus initiatorF();
 }

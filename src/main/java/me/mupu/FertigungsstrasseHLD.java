@@ -23,7 +23,7 @@ import static me.mupu.interfaces.bitpos.IOutput.*;
 import static me.mupu.interfaces.bitpos.IInput.*;
 
 /**
- * Die Highlevel-Treiberklasse des USB-Interfaces für die Fertigungsstrasse.
+ * Die Highlevel-Treiberklasse des USB-Interfaces fuer die Fertigungsstrasse.
  * Bietet die Schnittstellen zum Arbeiten mit der Fertigungsstrasse.
  */
 public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBohrmaschine, IMFraesmaschine, IMSchieber {
@@ -60,7 +60,7 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
 
     /**
      * Bei Benutzung sollte eine locale kopie erstellt werden,
-     * da sich diese Variable verändern kann.<br></br>
+     * da sich diese Variable veraendern kann.<br>
      * input ist invertiert: Default 111111.... und nicht 000000...
      */
     private int input; // vielleicht volatile ?
@@ -70,12 +70,18 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
 
     private static FertigungsstrasseHLD instance;
     private static int READ_DELAY = 0;
+    private static boolean use32BitInsteadOf64Bit = false;
     private Thread readingThread;
 
 
     private boolean flagWillWerkstueckAbgebenS = false;
     private boolean flagWillWerkstueckAbgebenB = false;
     private boolean flagWillWerkstueckAbgebenM = false;
+
+    public static void main(String[] args) {
+        FertigungsstrasseHLD.use32BitInsteadOf64Bit();
+        FertigungsstrasseHLD.open();
+    }
 
     /**
      * Erstellt die dll und das USB-Interface.
@@ -92,10 +98,20 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
      */
     private void erstelleDLLWennNichtVorhanden() {
         try {
-            final File tempFile = new File("Qlib32.dll");
+            final File tempFile;
+            if (use32BitInsteadOf64Bit)
+                tempFile = new File("Qlib32.dll");
+            else
+                tempFile = new File("Qlib64.dll");
             if (tempFile.createNewFile()) {
                 final FileOutputStream fos = new FileOutputStream(tempFile);
-                final InputStream is = getClass().getClassLoader().getResourceAsStream("Qlib32.dll");
+
+                final InputStream is;
+                if (use32BitInsteadOf64Bit)
+                    is = getClass().getClassLoader().getResourceAsStream("Qlib32.dll");
+                else
+                    is = getClass().getClassLoader().getResourceAsStream("Qlib64.dll");
+
                 int n;
                 final byte buffer[] = new byte[4096];
                 while (-1 != (n = is.read(buffer))) {
@@ -108,6 +124,13 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
         } catch (Exception ignored){}
     }
 
+    /**
+     * Benutzt die 32-Bit version statt der 64-Bit version.
+     * Muss vor der Erstellung dieser Klasse aufgerufen werden.
+     */
+    public static void use32BitInsteadOf64Bit() {
+        use32BitInsteadOf64Bit = true;
+    }
 
     /**
      * Eine Klasse, die alle benoetigten Methoden bereitstellt.
@@ -215,8 +238,8 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
     }
 
     /**
-     * Setzt einen delay für den Aufruf der USB-Interface-digitalIn Methode fest.<br></br>
-     * 0 = kein Delay.<br></br>
+     * Setzt einen delay fuer den Aufruf der USB-Interface-digitalIn Methode fest.<br>
+     * 0 = kein Delay.<br>
      * Default ist 0.
      *
      * @param readDelay Zeit in Millisekunden
