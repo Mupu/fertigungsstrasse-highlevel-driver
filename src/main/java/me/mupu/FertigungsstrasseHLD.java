@@ -77,11 +77,7 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
     private boolean flagWillWerkstueckAbgebenS = false;
     private boolean flagWillWerkstueckAbgebenB = false;
     private boolean flagWillWerkstueckAbgebenM = false;
-
-    public static void main(String[] args) {
-        FertigungsstrasseHLD.use32BitInsteadOf64Bit();
-        FertigungsstrasseHLD.open();
-    }
+    
 
     /**
      * Erstellt die dll und das USB-Interface.
