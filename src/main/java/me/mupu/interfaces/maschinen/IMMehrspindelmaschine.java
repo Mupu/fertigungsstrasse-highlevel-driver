@@ -11,12 +11,12 @@ import me.mupu.enums.sensoren.ESensorstatus;
 public interface IMMehrspindelmaschine {
 
     /**
-     * Versucht den Motorstatus zu setzen.<br></br>
-     * <br></br>
+     * Versucht den Motorstatus zu setzen.<br>
+     * <br>
      *
      * Setzt (Q_6) Motor-Mehrspindelmaschine Hub auf,
-     * prueft (I_06) ET Mehrspindelmaschine Hubeinheit oben.<br></br>
-     * <br></br>
+     * prueft (I_06) ET Mehrspindelmaschine Hubeinheit oben.<br>
+     * <br>
      *
      * Setzt (Q_7) Motor-Mehrspindelmaschine Hub ab.,
      * prueft (I_07) ET Mehrspindelmaschine Hubeinheit unten.
@@ -27,8 +27,8 @@ public interface IMMehrspindelmaschine {
     void setMotorstatusHubM(EMotorbewegungZAchse neuerStatus);
 
     /**
-     * Prueft (I_06) ET Mehrspindelmaschine Hubeinheit oben.<br></br>
-     * <br></br>
+     * Prueft (I_06) ET Mehrspindelmaschine Hubeinheit oben.<br>
+     * <br>
      * Prueft (I_07) ET Mehrspindelmaschine Hubeinheit unten.
      *
      * @return Gibt die Position der Hubeinheit zurueck.
@@ -63,7 +63,7 @@ public interface IMMehrspindelmaschine {
     ESensorstatus istRevolverAufPositionM();
 
     /**
-     * @return Gibt den Status von (I_27) Initiator Fräsmaschine Werkstückposition (ist Werkstueck in Position?) zurueck.
+     * @return Gibt den Status von (I_27) Initiator Fraesmaschine Werkstueckposition (ist Werkstueck in Position?) zurueck.
      */
     ESensorstatus istFraesmaschineBelegtM();
 
@@ -82,7 +82,7 @@ public interface IMMehrspindelmaschine {
     void setFlagWillWerkstueckAbgebenM(boolean neuerWert);
 
     /**
-     * @return Gibt den Status von (I_26) Initiator Bohrmaschine Werkstückposition (ist Werkstueck in Position?) zurueck.
+     * @return Gibt den Status von (I_26) Initiator Bohrmaschine Werkstueckposition (ist Werkstueck in Position?) zurueck.
      */
     ESensorstatus initiatorM();
 }

@@ -26,7 +26,18 @@ dependencies {
 }
 
 jar {
-    from {
-        configurations.extraLibs.collect { it.isDirectory() ? it : zipTree(it) }
-    }
+    // add local libs to jar
+    from configurations.extraLibs.collect { it.isDirectory() ? it : zipTree(it) }
+
+    // add .java files to jar
+    from sourceSets.main.allJava
 }
+
+
+task makeJavadoc (type: Jar) {
+    from docsDir
+    classifier='docs'
+    description='Creates a Javadoc Jar'
+}
+
+build.finalizedBy(makeJavadoc)

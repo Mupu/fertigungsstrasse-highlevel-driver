@@ -15,27 +15,28 @@ import me.mupu.enums.sensoren.ESensorstatus;
 public interface IKran {
 
     /**
-     * Versucht den Motorstatus zu setzen.<br></br>
-     * <br></br>
+     * Versucht den Motorstatus zu setzen.<br>
+     * <br>
      *
      * Setzt (Q_18) Motor X-Achse rechts,
-     * prueft (I_17) ET Xa (RECHTS).<br></br>
-     * <br></br>
+     * prueft (I_17) ET Xa (RECHTS).<br>
+     * <br>
      *
      * Setzt (Q_19) Motor X-Achse links,
      * prueft (I_18) ET Xe (LINKS).
      *
+     * @param neuerStatus Status den die Maschine einnehmen soll.
      * @throws RuntimeException wenn Pruefung fehlschlaegt.
      */
     void setMotorstatusXAchseK(EMotorbewegungXAchse neuerStatus);
 
     /**
-     * Versucht den Motorstatus zu setzen.<br></br>
-     * <br></br>
+     * Versucht den Motorstatus zu setzen.<br>
+     * <br>
      *
      * Setzt (Q_20) Motor Y-Achse vor,
-     * prueft (I_19) ET Ya (VORNE).<br></br>
-     * <br></br>
+     * prueft (I_19) ET Ya (VORNE).<br>
+     * <br>
      *
      * Setzt (Q_21) Motor Y-Achse rueck,
      * prueft (I_20) ET Ye (HINTEN).
@@ -46,12 +47,12 @@ public interface IKran {
     void setMotorstatusYAchseK(EMotorbewegungYAchse neuerStatus);
 
     /**
-     * Versucht den Motorstatus zu setzen.<br></br>
-     * <br></br>
+     * Versucht den Motorstatus zu setzen.<br>
+     * <br>
      *
      * Setzt (Q_22) Motor Z-Achse hoch,
-     * prueft (I_21) ET Za (OBEN).<br></br>
-     * <br></br>
+     * prueft (I_21) ET Za (OBEN).<br>
+     * <br>
      *
      * Setzt (Q_23) Motor Z-Achse runter,
      * prueft (I_22) ET Ze (UNTEN).
@@ -70,8 +71,8 @@ public interface IKran {
 
 
     /**
-     * Prueft (I_17) ET Xa (RECHTS).<br></br>
-     * <br></br>
+     * Prueft (I_17) ET Xa (RECHTS).<br>
+     * <br>
      * Prueft (I_18) ET Xe (LINKS).
      *
      * @return Gibt die Position der XAchse zurueck.
@@ -81,8 +82,8 @@ public interface IKran {
 
 
     /**
-     * Prueft (I_19) ET Ya (VORNE).<br></br>
-     * <br></br>
+     * Prueft (I_19) ET Ya (VORNE).<br>
+     * <br>
      * Prueft (I_20) ET Ye (HINTEN).
      *
      * @return Gibt die Position der YAchse zurueck.
@@ -92,8 +93,8 @@ public interface IKran {
 
 
     /**
-     * Prueft (I_21) ET Za (OBEN).<br></br>
-     * <br></br>
+     * Prueft (I_21) ET Za (OBEN).<br>
+     * <br>
      * Prueft (I_22) ET Ze (UNTEN).
      *
      * @return Gibt die Position der ZAchse zurueck.
