@@ -18,6 +18,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
 
 import static me.mupu.interfaces.bitpos.IOutput.*;
 import static me.mupu.interfaces.bitpos.IInput.*;
@@ -71,7 +72,7 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
     private static FertigungsstrasseHLD instance;
     private static int READ_DELAY = 0;
     private static boolean use32BitInsteadOf64Bit = false;
-    private Thread readingThread;
+    private ReadingThread readingThread;
 
 
     private boolean flagWillWerkstueckAbgebenS = false;
@@ -87,18 +88,24 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
 
         usbInterface = new UsbOptoRel32();
         output = 0; // default alles aus
+        input = ~0; // default alles aus
     }
 
     /**
-     * Erstellt die DLL wenn sie noch nicht vorhanden ist.
+     * Erstellt die DLL wenn sie noch nicht vorhanden ist und löscht vorherige.
      */
-    private void erstelleDLLWennNichtVorhanden() {
+    private void erstelleDLLWennNichtVorhanden() { // todo maybe delete 32bit dll if exists ?
         try {
+            // delete old files
+            Files.deleteIfExists(new File("Qlib32.dll").toPath());
+            Files.deleteIfExists(new File("Qlib64.dll").toPath());
+
             final File tempFile;
             if (use32BitInsteadOf64Bit)
                 tempFile = new File("Qlib32.dll");
             else
                 tempFile = new File("Qlib64.dll");
+
             if (tempFile.createNewFile()) {
                 final FileOutputStream fos = new FileOutputStream(tempFile);
 
@@ -191,14 +198,27 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
         if (instance == null)
             instance = new FertigungsstrasseHLD();
 
-        if (!instance.usbInterface.open())
+        if (!instance.usbInterface.open()) {
+            close();
             throw new RuntimeException("Quancom Verbindung konnte nicht hergestellt werden!");
+        }
 
         if (instance.readingThread != null)
-            instance.readingThread.stop();
+            instance.readingThread.terminate();
 
-        instance.readingThread = new Thread(() -> {
-            while (true) {
+        instance.readingThread = new ReadingThread();
+        instance.readingThread.start();
+    }
+
+    /**
+     * Thread der den input des USB-Interfaces zyclisch ausliesst.
+     */
+    private static class ReadingThread extends Thread {
+        private boolean terminate = false;
+        @Override
+        public void run() {
+            super.run();
+            while (!terminate) {
                 try {
                     if (READ_DELAY > 0) {
                         Thread.sleep(READ_DELAY);
@@ -209,8 +229,11 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
                     throw new RuntimeException("Interface nicht mehr erreichbar!");
                 }
             }
-        });
-        instance.readingThread.start();
+        }
+
+        public void terminate() {
+            terminate = true;
+        }
     }
 
     /**
@@ -525,6 +548,11 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
     }
 
     @Override
+    public ESensorstatus istSchieberInGrundpositionK() {
+        return (input & I_02) == 0 ? ESensorstatus.SIGNAL : ESensorstatus.KEIN_SIGNAL;
+    }
+
+    @Override
     public ESensorstatus istEinlegestationBelegtK() {
         return (input & I_01) == 0 ? ESensorstatus.SIGNAL : ESensorstatus.KEIN_SIGNAL;
     }
@@ -554,7 +582,7 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
     //*  IMBohrmaschine
     //************************
     @Override
-    public synchronized void setMotorstatusHubBm(EMotorbewegungZAchse neuerStatus) {
+    public synchronized void setMotorstatusHubB(EMotorbewegungZAchse neuerStatus) {
         throwErrorIfNull(neuerStatus);
 
         if (neuerStatus == EMotorbewegungZAchse.AUS) {
@@ -563,7 +591,7 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
         } else if (neuerStatus == EMotorbewegungZAchse.AUF) {
             resetOutputBit(Q_4);
 
-            if (getPositionHubBm() == ESensorZAchse.OBEN) {
+            if (getPositionHubB() == ESensorZAchse.OBEN) {
                 close();
                 throw new RuntimeException("Illegale Aktion: set Q_3 wenn I_04 aktiv");
             } else
@@ -572,7 +600,7 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
         } else if (neuerStatus == EMotorbewegungZAchse.AB) {
             resetOutputBit(Q_3);
 
-            if (getPositionHubBm() == ESensorZAchse.UNTEN) {
+            if (getPositionHubB() == ESensorZAchse.UNTEN) {
                 close();
                 throw new RuntimeException("Illegale Aktion: set Q_4 wenn I_05 aktiv");
             } else
@@ -583,7 +611,7 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
     }
 
     @Override
-    public ESensorZAchse getPositionHubBm() {
+    public ESensorZAchse getPositionHubB() {
         int data = input & (I_04 | I_05); // maske
 
         if (data == (I_04 | I_05)) {
@@ -602,7 +630,7 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
     }
 
     @Override
-    public synchronized void setMotorstatusWerkzeugAntriebBm(EMotorstatus neuerStatus) {
+    public synchronized void setMotorstatusWerkzeugAntriebB(EMotorstatus neuerStatus) {
         throwErrorIfNull(neuerStatus);
 
         if (neuerStatus == EMotorstatus.AUS) {
@@ -616,7 +644,7 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
     }
 
     @Override
-    public synchronized void setMotorstatusBandBm(EMotorstatus neuerStatus) {
+    public synchronized void setMotorstatusBandB(EMotorstatus neuerStatus) {
         throwErrorIfNull(neuerStatus);
 
         if (neuerStatus == EMotorstatus.AUS) {
@@ -645,12 +673,12 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
     }
 
     @Override
-    public ESensorstatus istUebergabestelleVorBohrmaschineBelegtBm() {
+    public ESensorstatus istUebergabestelleVorBohrmaschineBelegtB() {
         return (input & I_13) == 0 ? ESensorstatus.SIGNAL : ESensorstatus.KEIN_SIGNAL;
     }
 
     @Override
-    public ESensorstatus initiatorBm() {
+    public ESensorstatus initiatorB() {
         return (input & I_25) == 0 ? ESensorstatus.SIGNAL : ESensorstatus.KEIN_SIGNAL;
     }
 

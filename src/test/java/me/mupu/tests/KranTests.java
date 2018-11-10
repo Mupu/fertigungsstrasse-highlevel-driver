@@ -281,6 +281,17 @@
 //    }
 //
 //    @Test
+//    void istSchieberInGrundpositionK() {
+//        // BELEGT
+//        usb.setIn(I_02);
+//        assertEquals(kran.istSchieberInGrundpositionK(), ESensorstatus.SIGNAL);
+//
+//        // NICHT_BELEGT
+//        beforeEach();
+//        assertEquals(kran.istSchieberInGrundpositionK(), ESensorstatus.KEIN_SIGNAL);
+//    }
+//
+//    @Test
 //    void istEinlegestationBelegtK() {
 //        // BELEGT
 //        usb.setIn(I_01);

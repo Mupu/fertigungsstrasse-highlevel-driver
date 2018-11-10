@@ -103,6 +103,11 @@ public interface IKran {
     ESensorZAchse getPositionZAchseK();
 
     /**
+     * @return Gibt den Status von (I_02) ET Schieber Ausgangslage Einlagestation (LINKS) zurueck.
+     */
+    ESensorstatus istSchieberInGrundpositionK();
+
+    /**
      * @return Gibt den Status von (I_01) ET Belegtmeldung Q_Einlegestation zurueck.
      */
     ESensorstatus istEinlegestationBelegtK();

@@ -43,24 +43,24 @@
 //    }
 //
 //    @Test
-//    void setStatusHubBm() {
+//    void setStatusHubB() {
 //        // AUS
 //        f.output = Q_3 | Q_4; // setzte bits
-//        bohrmaschine.setMotorstatusHubBm(EMotorbewegungZAchse.AUS);
+//        bohrmaschine.setMotorstatusHubB(EMotorbewegungZAchse.AUS);
 //        assertEquals(f.output & (Q_3 | Q_4), 0);
 //
 //
 //        // AUF
 //        beforeEach();
 //        f.output = Q_4;
-//        bohrmaschine.setMotorstatusHubBm(EMotorbewegungZAchse.AUF);
+//        bohrmaschine.setMotorstatusHubB(EMotorbewegungZAchse.AUF);
 //        assertEquals(f.output & (Q_3 | Q_4), Q_3);
 //
 //
 //        // AB
 //        beforeEach();
 //        f.output = Q_3;
-//        bohrmaschine.setMotorstatusHubBm(EMotorbewegungZAchse.AB);
+//        bohrmaschine.setMotorstatusHubB(EMotorbewegungZAchse.AB);
 //        assertEquals(f.output & (Q_3 | Q_4), Q_4);
 //
 //
@@ -70,7 +70,7 @@
 //        beforeEach();
 //        f.output = Q_1;
 //        usb.setIn(I_04);
-//        assertThrows(RuntimeException.class, () -> bohrmaschine.setMotorstatusHubBm(EMotorbewegungZAchse.AUF));
+//        assertThrows(RuntimeException.class, () -> bohrmaschine.setMotorstatusHubB(EMotorbewegungZAchse.AUF));
 //        assertEquals(f.usbInterface.out, 0);
 //
 //
@@ -78,84 +78,84 @@
 //        beforeEach();
 //        f.output = Q_1;
 //        usb.setIn(I_05);
-//        assertThrows(RuntimeException.class, () -> bohrmaschine.setMotorstatusHubBm(EMotorbewegungZAchse.AB));
+//        assertThrows(RuntimeException.class, () -> bohrmaschine.setMotorstatusHubB(EMotorbewegungZAchse.AB));
 //        assertEquals(f.usbInterface.out, 0);
 //
 //        // NULL CHECK
 //        beforeEach();
 //        f.output = Q_1;
-//        assertThrows(RuntimeException.class, () -> bohrmaschine.setMotorstatusHubBm(null));
+//        assertThrows(RuntimeException.class, () -> bohrmaschine.setMotorstatusHubB(null));
 //        assertEquals(f.usbInterface.out, 0);
 //    }
 //
 //    @Test
-//    void getStatusHubBm() {
+//    void getStatusHubB() {
 //        // DAZWISCHEN
-//        assertEquals(bohrmaschine.getPositionHubBm(), ESensorZAchse.DAZWISCHEN);
+//        assertEquals(bohrmaschine.getPositionHubB(), ESensorZAchse.DAZWISCHEN);
 //
 //        // OBEN
 //        beforeEach();
 //        usb.setIn(I_04);
-//        assertEquals(bohrmaschine.getPositionHubBm(), ESensorZAchse.OBEN);
+//        assertEquals(bohrmaschine.getPositionHubB(), ESensorZAchse.OBEN);
 //
 //        // UNTEN
 //        beforeEach();
 //        usb.setIn(I_05);
-//        assertEquals(bohrmaschine.getPositionHubBm(), ESensorZAchse.UNTEN);
+//        assertEquals(bohrmaschine.getPositionHubB(), ESensorZAchse.UNTEN);
 //
 //        // ERROR
 //        beforeEach();
 //        f.output = Q_1;
 //        usb.setIn(I_04 | I_05);
-//        assertThrows(RuntimeException.class, () -> bohrmaschine.getPositionHubBm());
+//        assertThrows(RuntimeException.class, () -> bohrmaschine.getPositionHubB());
 //        assertEquals(f.usbInterface.out, 0);
 //    }
 //
 //    @Test
-//    void setStatusWerkzeugAntriebBm() {
+//    void setStatusWerkzeugAntriebB() {
 //        // AN
-//        bohrmaschine.setMotorstatusWerkzeugAntriebBm(EMotorstatus.AN);
+//        bohrmaschine.setMotorstatusWerkzeugAntriebB(EMotorstatus.AN);
 //        assertEquals(f.output & Q_5, Q_5);
 //
 //        // AUS
 //        beforeEach();
-//        bohrmaschine.setMotorstatusWerkzeugAntriebBm(EMotorstatus.AUS);
+//        bohrmaschine.setMotorstatusWerkzeugAntriebB(EMotorstatus.AUS);
 //        assertEquals(f.output & Q_5, 0);
 //
 //        // NULL CHECK
 //        beforeEach();
 //        f.output = Q_1;
-//        assertThrows(RuntimeException.class, () -> bohrmaschine.setMotorstatusWerkzeugAntriebBm(null));
+//        assertThrows(RuntimeException.class, () -> bohrmaschine.setMotorstatusWerkzeugAntriebB(null));
 //        assertEquals(f.usbInterface.out, 0);
 //    }
 //
 //    @Test
-//    void setStatusBandBm() {
+//    void setStatusBandB() {
 //        // AN
-//        bohrmaschine.setMotorstatusBandBm(EMotorstatus.AN);
+//        bohrmaschine.setMotorstatusBandB(EMotorstatus.AN);
 //        assertEquals(f.output & Q_15, Q_15);
 //
 //        // AUS
 //        beforeEach();
-//        bohrmaschine.setMotorstatusBandBm(EMotorstatus.AUS);
+//        bohrmaschine.setMotorstatusBandB(EMotorstatus.AUS);
 //        assertEquals(f.output & Q_15, 0);
 //
 //        // NULL CHECK
 //        beforeEach();
 //        f.output = Q_1;
-//        assertThrows(RuntimeException.class, () -> bohrmaschine.setMotorstatusBandBm(null));
+//        assertThrows(RuntimeException.class, () -> bohrmaschine.setMotorstatusBandB(null));
 //        assertEquals(f.usbInterface.out, 0);
 //    }
 //
 //    @Test
-//    void istUebergabestelleVorBohrmaschineBelegtBm() {
+//    void istUebergabestelleVorBohrmaschineBelegtB() {
 //        // AN
 //        usb.setIn(I_13);
-//        assertEquals(bohrmaschine.istUebergabestelleVorBohrmaschineBelegtBm(), ESensorstatus.SIGNAL);
+//        assertEquals(bohrmaschine.istUebergabestelleVorBohrmaschineBelegtB(), ESensorstatus.SIGNAL);
 //
 //        // AUS
 //        beforeEach();
-//        assertEquals(bohrmaschine.istUebergabestelleVorBohrmaschineBelegtBm(), ESensorstatus.KEIN_SIGNAL);
+//        assertEquals(bohrmaschine.istUebergabestelleVorBohrmaschineBelegtB(), ESensorstatus.KEIN_SIGNAL);
 //    }
 //
 //    @Test
@@ -170,14 +170,14 @@
 //    }
 //
 //    @Test
-//    void initiatorBm() {
+//    void initiatorB() {
 //        // AN
 //        usb.setIn(I_25);
-//        assertEquals(bohrmaschine.initiatorBm(), ESensorstatus.SIGNAL);
+//        assertEquals(bohrmaschine.initiatorB(), ESensorstatus.SIGNAL);
 //
 //        // AUS
 //        beforeEach();
-//        assertEquals(bohrmaschine.initiatorBm(), ESensorstatus.KEIN_SIGNAL);
+//        assertEquals(bohrmaschine.initiatorB(), ESensorstatus.KEIN_SIGNAL);
 //    }
 //
 //}

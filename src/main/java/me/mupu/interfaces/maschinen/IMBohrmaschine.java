@@ -24,21 +24,21 @@ public interface IMBohrmaschine {
      * @param neuerStatus Status den die Maschine einnehmen soll.
      * @throws RuntimeException wenn Pruefung fehlschlaegt.
      */
-    void setMotorstatusHubBm(EMotorbewegungZAchse neuerStatus);
+    void setMotorstatusHubB(EMotorbewegungZAchse neuerStatus);
 
     /**
      * Versucht den Status von (Q_5) Motor-Bohrmaschine Werkzeug-Antrieb zu setzen.
      *
      * @param neuerStatus Status den die Maschine einnehmen soll.
      */
-    void setMotorstatusWerkzeugAntriebBm(EMotorstatus neuerStatus);
+    void setMotorstatusWerkzeugAntriebB(EMotorstatus neuerStatus);
 
     /**
      * Versucht den Status von (Q_15) Motor-Band Bohrmaschine zu setzen.
      *
      * @param neuerStatus Status den die Maschine einnehmen soll.
      */
-    void setMotorstatusBandBm(EMotorstatus neuerStatus);
+    void setMotorstatusBandB(EMotorstatus neuerStatus);
 
     /**
      * Prueft (I_04) ET Bohrmaschine Hubeinheit oben.<br>
@@ -48,7 +48,7 @@ public interface IMBohrmaschine {
      * @return Gibt die Position der Hubeinheit zurueck.
      * @throws RuntimeException wenn beide aktiv.
      */
-    ESensorZAchse getPositionHubBm();
+    ESensorZAchse getPositionHubB();
 
     /**
      * @return Gibt den Status von (I_26) Initiator Mehrspindelmaschine Werkstueckposition (ist Werkstueck in Position?) zurueck.
@@ -72,11 +72,11 @@ public interface IMBohrmaschine {
     /**
      * @return Gibt den Status von (I_13) Fotowiderstand Bandstart vor Bohrmaschine.
      */
-    ESensorstatus istUebergabestelleVorBohrmaschineBelegtBm();
+    ESensorstatus istUebergabestelleVorBohrmaschineBelegtB();
 
     /**
      * @return Gibt den Status von (I_25) Initiator Bohrmaschine Werkstueckposition (ist Werkstueck in Position?) zurueck.
      */
-    ESensorstatus initiatorBm();
+    ESensorstatus initiatorB();
 
 }
