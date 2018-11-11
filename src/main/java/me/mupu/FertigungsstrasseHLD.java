@@ -45,8 +45,6 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
     //      (0)       0     0       1      (0)
     //      (0)       0     0       0      (1)
 
-    // todo add synchronized check testclass
-
 
     // DEBUG
 //    public static FertigungsstrasseHLD instance;
@@ -69,16 +67,17 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
 
     private final UsbOptoRel32 usbInterface;
 
-    private static FertigungsstrasseHLD instance;
+    private static FertigungsstrasseHLD instance = null;
     private static int READ_DELAY = 0;
     private static boolean use32BitInsteadOf64Bit = false;
-    private ReadingThread readingThread;
+    private static boolean schnittstelleOffen = false;
+    private ReadingThread readingThread = null;
 
 
     private boolean flagWillWerkstueckAbgebenS = false;
     private boolean flagWillWerkstueckAbgebenB = false;
     private boolean flagWillWerkstueckAbgebenM = false;
-    
+
 
     /**
      * Erstellt die dll und das USB-Interface.
@@ -94,7 +93,7 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
     /**
      * Erstellt die DLL wenn sie noch nicht vorhanden ist und löscht vorherige.
      */
-    private void erstelleDLLWennNichtVorhanden() { // todo maybe delete 32bit dll if exists ?
+    private void erstelleDLLWennNichtVorhanden() {
         try {
             // delete old files
             Files.deleteIfExists(new File("Qlib32.dll").toPath());
@@ -124,7 +123,8 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
                 is.close();
                 fos.close();
             }
-        } catch (Exception ignored){}
+        } catch (Exception ignored) {
+        }
     }
 
     /**
@@ -142,7 +142,7 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
      */
     public static IMSchieber getSchieber() {
         if (instance == null)
-            instance = new FertigungsstrasseHLD();
+            throw new RuntimeException("Quancom Verbindung noch nicht hergestellt. Rufe zuerst 'open()' auf.");
         return instance;
     }
 
@@ -153,7 +153,7 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
      */
     public static IKran getKran() {
         if (instance == null)
-            instance = new FertigungsstrasseHLD();
+            throw new RuntimeException("Quancom Verbindung noch nicht hergestellt. Rufe zuerst 'open()' auf.");
         return instance;
     }
 
@@ -164,7 +164,7 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
      */
     public static IMBohrmaschine getBohrmaschine() {
         if (instance == null)
-            instance = new FertigungsstrasseHLD();
+            throw new RuntimeException("Quancom Verbindung noch nicht hergestellt. Rufe zuerst 'open()' auf.");
         return instance;
     }
 
@@ -175,7 +175,7 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
      */
     public static IMFraesmaschine getFraesmaschine() {
         if (instance == null)
-            instance = new FertigungsstrasseHLD();
+            throw new RuntimeException("Quancom Verbindung noch nicht hergestellt. Rufe zuerst 'open()' auf.");
         return instance;
     }
 
@@ -186,7 +186,7 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
      */
     public static IMMehrspindelmaschine getMehrspindelmaschine() {
         if (instance == null)
-            instance = new FertigungsstrasseHLD();
+            throw new RuntimeException("Quancom Verbindung noch nicht hergestellt. Rufe zuerst 'open()' auf.");
         return instance;
     }
 
@@ -195,19 +195,19 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
      * Erstellt einen ReadingThread der den input des USB-Interfaces zyclisch ausliesst.
      */
     public static void open() {
-        if (instance == null)
-            instance = new FertigungsstrasseHLD();
+        if (schnittstelleOffen)
+            return;
+
+        instance = new FertigungsstrasseHLD();
 
         if (!instance.usbInterface.open()) {
             close();
             throw new RuntimeException("Quancom Verbindung konnte nicht hergestellt werden!");
+        } else {
+            instance.readingThread = new ReadingThread();
+            instance.readingThread.start();
+            schnittstelleOffen = true;
         }
-
-        if (instance.readingThread != null)
-            instance.readingThread.terminate();
-
-        instance.readingThread = new ReadingThread();
-        instance.readingThread.start();
     }
 
     /**
@@ -215,6 +215,7 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
      */
     private static class ReadingThread extends Thread {
         private boolean terminate = false;
+
         @Override
         public void run() {
             super.run();
@@ -242,11 +243,10 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
      * den ReadingThread zu beenden.
      */
     public static void close() {
-        if (instance == null)
-            instance = new FertigungsstrasseHLD();
+        if (!schnittstelleOffen)
+            return;
 
-        if (instance.readingThread != null)
-            instance.readingThread.stop();
+        instance.readingThread.terminate();
 
         try {
             instance.usbInterface.digitalOut(0);
@@ -254,6 +254,7 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
         }
 
         instance.usbInterface.close();
+        schnittstelleOffen = false;
     }
 
     /**
@@ -306,7 +307,7 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
      * @param object Object das getestet werden soll
      * @throws RuntimeException wenn object NULL ist
      */
-    private void throwErrorIfNull(Object object) { // todo testen ob program beendet wird
+    private void throwErrorIfNull(Object object) {
         if (object == null) {
             close();
             throw new RuntimeException("Wrong Input: Parameter darf nicht NULL sein!");
@@ -319,6 +320,9 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
     //************************
     @Override
     public synchronized void setMotorstatusSchieberS(EMotorbewegungXAchse neuerStatus) {
+        if (!schnittstelleOffen)
+            throw new RuntimeException("Interface nicht geoeffnet. Benutze 'open()'.");
+
         throwErrorIfNull(neuerStatus);
 
         if (neuerStatus == EMotorbewegungXAchse.AUS) {
@@ -348,6 +352,9 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
 
     @Override
     public ESensorXAchse getPositionSchieberS() {
+        if (!schnittstelleOffen)
+            throw new RuntimeException("Interface nicht geoeffnet. Benutze 'open()'.");
+
         int data = input & (I_02 | I_03); // maske
 
         if (data == (I_02 | I_03)) {
@@ -367,21 +374,33 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
 
     @Override
     public ESensorstatus istEinlegestationBelegtS() {
+        if (!schnittstelleOffen)
+            throw new RuntimeException("Interface nicht geoeffnet. Benutze 'open()'.");
+
         return (input & I_01) == 0 ? ESensorstatus.SIGNAL : ESensorstatus.KEIN_SIGNAL;
     }
 
     @Override
     public ESensorstatus istUebergabestelleVorBohrmaschineBelegtS() {
+        if (!schnittstelleOffen)
+            throw new RuntimeException("Interface nicht geoeffnet. Benutze 'open()'.");
+
         return (input & I_13) == 0 ? ESensorstatus.SIGNAL : ESensorstatus.KEIN_SIGNAL;
     }
 
     @Override
     public ESensorstatus istBohrmaschineBelegtS() {
+        if (!schnittstelleOffen)
+            throw new RuntimeException("Interface nicht geoeffnet. Benutze 'open()'.");
+
         return (input & I_25) == 0 ? ESensorstatus.SIGNAL : ESensorstatus.KEIN_SIGNAL;
     }
 
     @Override
     public void setFlagWillWerkstueckAbgebenS(boolean neuerWert) {
+        if (!schnittstelleOffen)
+            throw new RuntimeException("Interface nicht geoeffnet. Benutze 'open()'.");
+
         flagWillWerkstueckAbgebenS = neuerWert;
     }
 
@@ -390,6 +409,9 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
     //************************
     @Override
     public synchronized void setMotorstatusXAchseK(EMotorbewegungXAchse neuerStatus) {
+        if (!schnittstelleOffen)
+            throw new RuntimeException("Interface nicht geoeffnet. Benutze 'open()'.");
+
         throwErrorIfNull(neuerStatus);
 
         if (neuerStatus == EMotorbewegungXAchse.AUS) {
@@ -419,6 +441,9 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
 
     @Override
     public ESensorXAchse getPositionXAchseK() {
+        if (!schnittstelleOffen)
+            throw new RuntimeException("Interface nicht geoeffnet. Benutze 'open()'.");
+
         int data = input & (I_17 | I_18); // maske
 
         if (data == (I_17 | I_18)) {
@@ -438,6 +463,9 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
 
     @Override
     public synchronized void setMotorstatusYAchseK(EMotorbewegungYAchse neuerStatus) {
+        if (!schnittstelleOffen)
+            throw new RuntimeException("Interface nicht geoeffnet. Benutze 'open()'.");
+
         throwErrorIfNull(neuerStatus);
 
         if (neuerStatus == EMotorbewegungYAchse.AUS) {
@@ -467,6 +495,9 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
 
     @Override
     public ESensorYAchse getPositionYAchseK() {
+        if (!schnittstelleOffen)
+            throw new RuntimeException("Interface nicht geoeffnet. Benutze 'open()'.");
+
         int data = input & (I_19 | I_20); // maske
 
         if (data == (I_19 | I_20)) {
@@ -486,6 +517,9 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
 
     @Override
     public synchronized void setMotorstatusZAchseK(EMotorbewegungZAchse neuerStatus) {
+        if (!schnittstelleOffen)
+            throw new RuntimeException("Interface nicht geoeffnet. Benutze 'open()'.");
+
         throwErrorIfNull(neuerStatus);
 
         if (neuerStatus == EMotorbewegungZAchse.AUS) {
@@ -515,6 +549,9 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
 
     @Override
     public ESensorZAchse getPositionZAchseK() {
+        if (!schnittstelleOffen)
+            throw new RuntimeException("Interface nicht geoeffnet. Benutze 'open()'.");
+
         int data = input & (I_21 | I_22); // maske
 
 
@@ -535,6 +572,9 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
 
     @Override
     public synchronized void setMotorstatusMagnetK(EMotorstatus neuerStatus) {
+        if (!schnittstelleOffen)
+            throw new RuntimeException("Interface nicht geoeffnet. Benutze 'open()'.");
+
         throwErrorIfNull(neuerStatus);
 
         if (neuerStatus == EMotorstatus.AUS) {
@@ -549,31 +589,49 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
 
     @Override
     public ESensorstatus istSchieberInGrundpositionK() {
+        if (!schnittstelleOffen)
+            throw new RuntimeException("Interface nicht geoeffnet. Benutze 'open()'.");
+
         return (input & I_02) == 0 ? ESensorstatus.SIGNAL : ESensorstatus.KEIN_SIGNAL;
     }
 
     @Override
     public ESensorstatus istEinlegestationBelegtK() {
+        if (!schnittstelleOffen)
+            throw new RuntimeException("Interface nicht geoeffnet. Benutze 'open()'.");
+
         return (input & I_01) == 0 ? ESensorstatus.SIGNAL : ESensorstatus.KEIN_SIGNAL;
     }
 
     @Override
     public ESensorstatus istAusschleussbahnBelegtK() {
+        if (!schnittstelleOffen)
+            throw new RuntimeException("Interface nicht geoeffnet. Benutze 'open()'.");
+
         return (input & I_14) == 0 ? ESensorstatus.SIGNAL : ESensorstatus.KEIN_SIGNAL;
     }
 
     @Override
     public ESensorstatus initiatorXAchseK() {
+        if (!schnittstelleOffen)
+            throw new RuntimeException("Interface nicht geoeffnet. Benutze 'open()'.");
+
         return (input & I_28) == 0 ? ESensorstatus.SIGNAL : ESensorstatus.KEIN_SIGNAL;
     }
 
     @Override
     public ESensorstatus initiatorYAchseK() {
+        if (!schnittstelleOffen)
+            throw new RuntimeException("Interface nicht geoeffnet. Benutze 'open()'.");
+
         return (input & I_29) == 0 ? ESensorstatus.SIGNAL : ESensorstatus.KEIN_SIGNAL;
     }
 
     @Override
     public ESensorstatus initiatorZAchseK() {
+        if (!schnittstelleOffen)
+            throw new RuntimeException("Interface nicht geoeffnet. Benutze 'open()'.");
+
         return (input & I_30) == 0 ? ESensorstatus.SIGNAL : ESensorstatus.KEIN_SIGNAL;
     }
 
@@ -583,6 +641,9 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
     //************************
     @Override
     public synchronized void setMotorstatusHubB(EMotorbewegungZAchse neuerStatus) {
+        if (!schnittstelleOffen)
+            throw new RuntimeException("Interface nicht geoeffnet. Benutze 'open()'.");
+
         throwErrorIfNull(neuerStatus);
 
         if (neuerStatus == EMotorbewegungZAchse.AUS) {
@@ -612,6 +673,9 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
 
     @Override
     public ESensorZAchse getPositionHubB() {
+        if (!schnittstelleOffen)
+            throw new RuntimeException("Interface nicht geoeffnet. Benutze 'open()'.");
+
         int data = input & (I_04 | I_05); // maske
 
         if (data == (I_04 | I_05)) {
@@ -631,6 +695,9 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
 
     @Override
     public synchronized void setMotorstatusWerkzeugAntriebB(EMotorstatus neuerStatus) {
+        if (!schnittstelleOffen)
+            throw new RuntimeException("Interface nicht geoeffnet. Benutze 'open()'.");
+
         throwErrorIfNull(neuerStatus);
 
         if (neuerStatus == EMotorstatus.AUS) {
@@ -645,6 +712,9 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
 
     @Override
     public synchronized void setMotorstatusBandB(EMotorstatus neuerStatus) {
+        if (!schnittstelleOffen)
+            throw new RuntimeException("Interface nicht geoeffnet. Benutze 'open()'.");
+
         throwErrorIfNull(neuerStatus);
 
         if (neuerStatus == EMotorstatus.AUS) {
@@ -659,26 +729,41 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
 
     @Override
     public ESensorstatus istMehrspindelmaschineBelegtB() {
+        if (!schnittstelleOffen)
+            throw new RuntimeException("Interface nicht geoeffnet. Benutze 'open()'.");
+
         return (input & I_26) == 0 ? ESensorstatus.SIGNAL : ESensorstatus.KEIN_SIGNAL;
     }
 
     @Override
     public ESensorstatus sollWerkstueckAnnehmenB() {
+        if (!schnittstelleOffen)
+            throw new RuntimeException("Interface nicht geoeffnet. Benutze 'open()'.");
+
         return flagWillWerkstueckAbgebenS ? ESensorstatus.SIGNAL : ESensorstatus.KEIN_SIGNAL;
     }
 
     @Override
     public void setFlagWillWerkstueckAbgebenB(boolean neuerWert) {
+        if (!schnittstelleOffen)
+            throw new RuntimeException("Interface nicht geoeffnet. Benutze 'open()'.");
+
         flagWillWerkstueckAbgebenB = neuerWert;
     }
 
     @Override
     public ESensorstatus istUebergabestelleVorBohrmaschineBelegtB() {
+        if (!schnittstelleOffen)
+            throw new RuntimeException("Interface nicht geoeffnet. Benutze 'open()'.");
+
         return (input & I_13) == 0 ? ESensorstatus.SIGNAL : ESensorstatus.KEIN_SIGNAL;
     }
 
     @Override
     public ESensorstatus initiatorB() {
+        if (!schnittstelleOffen)
+            throw new RuntimeException("Interface nicht geoeffnet. Benutze 'open()'.");
+
         return (input & I_25) == 0 ? ESensorstatus.SIGNAL : ESensorstatus.KEIN_SIGNAL;
     }
 
@@ -689,6 +774,9 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
 
     @Override
     public synchronized void setMotorstatusHubM(EMotorbewegungZAchse neuerStatus) {
+        if (!schnittstelleOffen)
+            throw new RuntimeException("Interface nicht geoeffnet. Benutze 'open()'.");
+
         throwErrorIfNull(neuerStatus);
 
         if (neuerStatus == EMotorbewegungZAchse.AUS) {
@@ -718,6 +806,9 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
 
     @Override
     public ESensorZAchse getPositionHubM() {
+        if (!schnittstelleOffen)
+            throw new RuntimeException("Interface nicht geoeffnet. Benutze 'open()'.");
+
         int data = input & (I_06 | I_07); // maske
 
         if (data == (I_06 | I_07)) {
@@ -737,6 +828,9 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
 
     @Override
     public synchronized void setMotorstatusRevolverdrehungM(EMotorstatus neuerStatus) {
+        if (!schnittstelleOffen)
+            throw new RuntimeException("Interface nicht geoeffnet. Benutze 'open()'.");
+
         throwErrorIfNull(neuerStatus);
 
         if (neuerStatus == EMotorstatus.AUS) {
@@ -751,6 +845,9 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
 
     @Override
     public synchronized void setMotorstatusWerkzeugAntriebM(EMotorstatus neuerStatus) {
+        if (!schnittstelleOffen)
+            throw new RuntimeException("Interface nicht geoeffnet. Benutze 'open()'.");
+
         throwErrorIfNull(neuerStatus);
 
         if (neuerStatus == EMotorstatus.AUS) {
@@ -765,6 +862,9 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
 
     @Override
     public synchronized void setMotorstatusBandM(EMotorstatus neuerStatus) {
+        if (!schnittstelleOffen)
+            throw new RuntimeException("Interface nicht geoeffnet. Benutze 'open()'.");
+
         throwErrorIfNull(neuerStatus);
 
         if (neuerStatus == EMotorstatus.AUS) {
@@ -779,26 +879,41 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
 
     @Override
     public ESensorstatus istRevolverAufPositionM() {
+        if (!schnittstelleOffen)
+            throw new RuntimeException("Interface nicht geoeffnet. Benutze 'open()'.");
+
         return (input & I_08) == 0 ? ESensorstatus.SIGNAL : ESensorstatus.KEIN_SIGNAL;
     }
 
     @Override
     public ESensorstatus istFraesmaschineBelegtM() {
+        if (!schnittstelleOffen)
+            throw new RuntimeException("Interface nicht geoeffnet. Benutze 'open()'.");
+
         return (input & I_27) == 0 ? ESensorstatus.SIGNAL : ESensorstatus.KEIN_SIGNAL;
     }
 
     @Override
     public ESensorstatus sollWerkstueckAnnehmenM() {
+        if (!schnittstelleOffen)
+            throw new RuntimeException("Interface nicht geoeffnet. Benutze 'open()'.");
+
         return flagWillWerkstueckAbgebenB ? ESensorstatus.SIGNAL : ESensorstatus.KEIN_SIGNAL;
     }
 
     @Override
     public void setFlagWillWerkstueckAbgebenM(boolean neuerWert) {
+        if (!schnittstelleOffen)
+            throw new RuntimeException("Interface nicht geoeffnet. Benutze 'open()'.");
+
         flagWillWerkstueckAbgebenM = neuerWert;
     }
 
     @Override
     public ESensorstatus initiatorM() {
+        if (!schnittstelleOffen)
+            throw new RuntimeException("Interface nicht geoeffnet. Benutze 'open()'.");
+
         return (input & I_26) == 0 ? ESensorstatus.SIGNAL : ESensorstatus.KEIN_SIGNAL;
     }
 
@@ -808,6 +923,9 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
     //************************
     @Override
     public synchronized void setMotorstatusHubF(EMotorbewegungZAchse neuerStatus) {
+        if (!schnittstelleOffen)
+            throw new RuntimeException("Interface nicht geoeffnet. Benutze 'open()'.");
+
         throwErrorIfNull(neuerStatus);
 
         if (neuerStatus == EMotorbewegungZAchse.AUS) {
@@ -837,6 +955,9 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
 
     @Override
     public ESensorZAchse getPositionHubF() {
+        if (!schnittstelleOffen)
+            throw new RuntimeException("Interface nicht geoeffnet. Benutze 'open()'.");
+
         int data = input & (I_09 | I_10); // maske
 
         if (data == (I_09 | I_10)) {
@@ -856,6 +977,9 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
 
     @Override
     public synchronized void setMotorstatusQuerschlittenF(EMotorbewegungYAchse neuerStatus) {
+        if (!schnittstelleOffen)
+            throw new RuntimeException("Interface nicht geoeffnet. Benutze 'open()'.");
+
         throwErrorIfNull(neuerStatus);
 
         if (neuerStatus == EMotorbewegungYAchse.AUS) {
@@ -886,6 +1010,9 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
 
     @Override
     public ESensorYAchse getPositionQuerschlittenF() {
+        if (!schnittstelleOffen)
+            throw new RuntimeException("Interface nicht geoeffnet. Benutze 'open()'.");
+
         int data = input & (I_11 | I_12); // maske
 
         if (data == (I_11 | I_12)) {
@@ -905,6 +1032,9 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
 
     @Override
     public synchronized void setMotorstatusWerkzeugAntriebF(EMotorstatus neuerStatus) {
+        if (!schnittstelleOffen)
+            throw new RuntimeException("Interface nicht geoeffnet. Benutze 'open()'.");
+
         throwErrorIfNull(neuerStatus);
 
         if (neuerStatus == EMotorstatus.AN) {
@@ -919,6 +1049,9 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
 
     @Override
     public synchronized void setMotorstatusBandF(EMotorstatus neuerStatus) {
+        if (!schnittstelleOffen)
+            throw new RuntimeException("Interface nicht geoeffnet. Benutze 'open()'.");
+
         throwErrorIfNull(neuerStatus);
 
         if (neuerStatus == EMotorstatus.AN)
@@ -930,16 +1063,25 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
 
     @Override
     public ESensorstatus istAusschleussbahnBelegtF() {
+        if (!schnittstelleOffen)
+            throw new RuntimeException("Interface nicht geoeffnet. Benutze 'open()'.");
+
         return (input & I_14) == 0 ? ESensorstatus.SIGNAL : ESensorstatus.KEIN_SIGNAL;
     }
 
     @Override
     public ESensorstatus sollWerkstueckAnnehmenF() {
+        if (!schnittstelleOffen)
+            throw new RuntimeException("Interface nicht geoeffnet. Benutze 'open()'.");
+
         return flagWillWerkstueckAbgebenM ? ESensorstatus.SIGNAL : ESensorstatus.KEIN_SIGNAL;
     }
 
     @Override
     public ESensorstatus initiatorF() {
+        if (!schnittstelleOffen)
+            throw new RuntimeException("Interface nicht geoeffnet. Benutze 'open()'.");
+
         return (input & I_27) == 0 ? ESensorstatus.SIGNAL : ESensorstatus.KEIN_SIGNAL;
     }
 }
