@@ -239,12 +239,14 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
 
     /**
      * Versucht alle output-Bits auf 'AUS' zu setzten.
-     * Danach wird versucht das USB-Interface zu schliessen und
+     * Ausserdem wird versucht das USB-Interface zu schliessen und
      * den ReadingThread zu beenden.
      */
     public static void close() {
         if (!schnittstelleOffen)
             return;
+
+        schnittstelleOffen = false;
 
         instance.readingThread.terminate();
 
@@ -254,7 +256,6 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
         }
 
         instance.usbInterface.close();
-        schnittstelleOffen = false;
     }
 
     /**
