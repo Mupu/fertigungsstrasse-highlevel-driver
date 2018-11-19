@@ -46,17 +46,6 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
     //      (0)       0     0       0      (1)
 
 
-    // DEBUG
-//    public static FertigungsstrasseHLD instance;
-//    public final UsbOptoRel32 usbInterface;
-//    public volatile int output;
-//    public volatile int input;
-
-    // RELEASE
-    //    private static FertigungsstrasseHLD instance;
-    //    private final UsbOptoRel32 usbInterface;
-    //    private int output; // vielleicht volatile ?
-
     /**
      * Bei Benutzung sollte eine locale kopie erstellt werden,
      * da sich diese Variable veraendern kann.<br>
