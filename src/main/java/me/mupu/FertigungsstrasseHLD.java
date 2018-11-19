@@ -239,12 +239,14 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
 
         instance.readingThread.terminate();
 
-        try {
-            instance.usbInterface.digitalOut(0);
-        } catch (Exception ignored) {
-        }
+        synchronized (instance) {
+            try {
+                instance.usbInterface.digitalOut(0);
+            } catch (Exception ignored) {
+            }
 
-        instance.usbInterface.close();
+            instance.usbInterface.close();
+        }
     }
 
     /**
@@ -314,6 +316,8 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
             throw new RuntimeException("Interface nicht geoeffnet. Benutze 'open()'.");
 
         throwErrorIfNull(neuerStatus);
+
+        // todo synchronized ab hier. und davor prüfen ob änderung passiert ist
 
         if (neuerStatus == EMotorbewegungXAchse.AUS) {
             resetOutputBit(Q_1 | Q_2);
