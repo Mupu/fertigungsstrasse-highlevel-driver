@@ -53,8 +53,8 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
      * da sich diese Variable veraendern kann.<br>
      * input ist invertiert: Default 111111.... und nicht 000000...
      */
-    private int input; // vielleicht volatile ?
-    private int output; // vielleicht volatile ?
+    private int input;
+    private int output;
 
     private final UsbOptoRel32 usbInterface;
 
