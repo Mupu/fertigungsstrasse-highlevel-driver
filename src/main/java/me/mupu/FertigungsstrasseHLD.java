@@ -28,6 +28,7 @@ import static me.mupu.interfaces.bitpos.IInput.*;
  * Die Highlevel-Treiberklasse des USB-Interfaces fuer die Fertigungsstrasse.
  * Bietet die Schnittstellen zum Arbeiten mit der Fertigungsstrasse.
  */
+@SuppressWarnings("SynchronizeOnNonFinalField")
 public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBohrmaschine, IMFraesmaschine, IMSchieber {
     // 1 = werkstueck; 0 = kein werkstueck
 
@@ -229,7 +230,7 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
             }
         }
 
-        public void terminate() {
+        private void terminate() {
             terminate = true;
         }
     }
@@ -311,6 +312,23 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
         if (object == null) {
             close();
             throw new RuntimeException("Wrong Input: Parameter darf nicht NULL sein!");
+        }
+    }
+
+    /**
+     * Duplicate Code
+     */
+    private void setMotorstatusBit(EMotorstatus neuerStatus, int bit) {
+        synchronized (instance) {
+
+            if (neuerStatus == EMotorstatus.AUS) {
+                resetOutputBit(bit);
+
+            } else if (neuerStatus == EMotorstatus.AN) {
+                setOutputBit(bit);
+
+            }
+            write();
         }
     }
 
@@ -623,17 +641,7 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
         if (lastCommand == neuerStatus)
             return;
 
-        synchronized (instance) {
-
-            if (neuerStatus == EMotorstatus.AUS) {
-                resetOutputBit(Q_24);
-
-            } else if (neuerStatus == EMotorstatus.AN) {
-                setOutputBit(Q_24);
-
-            }
-            write();
-        }
+        setMotorstatusBit(neuerStatus, Q_24);
     }
 
     @Override
@@ -765,18 +773,7 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
         if (lastCommand == neuerStatus)
             return;
 
-        synchronized (instance) {
-
-        if (neuerStatus == EMotorstatus.AUS) {
-            resetOutputBit(Q_5);
-
-        } else if (neuerStatus == EMotorstatus.AN) {
-            setOutputBit(Q_5);
-
-        }
-        write();
-
-        }
+        setMotorstatusBit(neuerStatus, Q_5);
     }
 
     @Override
@@ -792,18 +789,7 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
         if (lastCommand == neuerStatus)
             return;
 
-        synchronized (instance) {
-
-            if (neuerStatus == EMotorstatus.AUS) {
-                resetOutputBit(Q_15);
-
-            } else if (neuerStatus == EMotorstatus.AN) {
-                setOutputBit(Q_15);
-
-            }
-            write();
-
-        }
+        setMotorstatusBit(neuerStatus, Q_15);
     }
 
     @Override
@@ -928,18 +914,7 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
         if (lastCommand == neuerStatus)
             return;
 
-        synchronized (instance) {
-
-            if (neuerStatus == EMotorstatus.AUS) {
-                resetOutputBit(Q_8);
-
-            } else if (neuerStatus == EMotorstatus.AN) {
-                setOutputBit(Q_8);
-
-            }
-            write();
-
-        }
+        setMotorstatusBit(neuerStatus, Q_8);
     }
 
     @Override
@@ -955,18 +930,7 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
         if (lastCommand == neuerStatus)
             return;
 
-        synchronized (instance) {
-
-            if (neuerStatus == EMotorstatus.AUS) {
-                resetOutputBit(Q_9);
-
-            } else if (neuerStatus == EMotorstatus.AN) {
-                setOutputBit(Q_9);
-
-            }
-            write();
-
-        }
+        setMotorstatusBit(neuerStatus, Q_9);
     }
 
     @Override
@@ -982,18 +946,7 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
         if (lastCommand == neuerStatus)
             return;
 
-        synchronized (instance) {
-
-            if (neuerStatus == EMotorstatus.AUS) {
-                resetOutputBit(Q_16);
-
-            } else if (neuerStatus == EMotorstatus.AN) {
-                setOutputBit(Q_16);
-
-            }
-            write();
-
-        }
+        setMotorstatusBit(neuerStatus, Q_16);
     }
 
     @Override
@@ -1182,18 +1135,7 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
         if (lastCommand == neuerStatus)
             return;
 
-        synchronized (instance) {
-
-            if (neuerStatus == EMotorstatus.AN) {
-                setOutputBit(Q_14);
-
-            } else if (neuerStatus == EMotorstatus.AUS) {
-                resetOutputBit(Q_14);
-
-            }
-            write();
-
-        }
+        setMotorstatusBit(neuerStatus, Q_14);
     }
 
     @Override
@@ -1209,18 +1151,7 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
         if (lastCommand == neuerStatus)
             return;
 
-        synchronized (instance) {
-
-            if (neuerStatus == EMotorstatus.AN) {
-                setOutputBit(Q_17);
-
-            } else if (neuerStatus == EMotorstatus.AUS) {
-                resetOutputBit(Q_17);
-
-            }
-            write();
-
-        }
+        setMotorstatusBit(neuerStatus, Q_17);
     }
 
     @Override
