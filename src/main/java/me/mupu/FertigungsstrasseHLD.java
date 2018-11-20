@@ -19,6 +19,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
+import java.util.HashMap;
 
 import static me.mupu.interfaces.bitpos.IOutput.*;
 import static me.mupu.interfaces.bitpos.IInput.*;
@@ -67,6 +68,12 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
     private boolean flagWillWerkstueckAbgebenB = false;
     private boolean flagWillWerkstueckAbgebenM = false;
 
+    /**
+     * Beinhaltet den zuletzt empfangenen setCommand von jeder set Methode die einen Motor antreibt.
+     * Wird benoetigt damit Threads die set Methoden in einer While-True Schleife benutzen koennen,
+     * ohne die anderen zu blockieren. (synchronized)
+     */
+    private HashMap<String, Object> lastSetCommands = new HashMap<>();
 
     /**
      * Erstellt die dll und das USB-Interface.
@@ -182,6 +189,7 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
     /**
      * Versucht USB-Interface zu oeffnen.
      * Erstellt einen ReadingThread der den input des USB-Interfaces zyclisch ausliesst.
+     * Bei erneutem Oeffnen nach Aufruf der Close-Methode wird alles resettet. Auch der readingDelay...
      */
     public static void open() {
         if (schnittstelleOffen)
@@ -311,37 +319,45 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
     //*  IMSchieber
     //************************
     @Override
-    public synchronized void setMotorstatusSchieberS(EMotorbewegungXAchse neuerStatus) {
+    public void setMotorstatusSchieberS(EMotorbewegungXAchse neuerStatus) {
         if (!schnittstelleOffen)
             throw new RuntimeException("Interface nicht geoeffnet. Benutze 'open()'.");
 
         throwErrorIfNull(neuerStatus);
 
-        // todo synchronized ab hier. und davor prüfen ob änderung passiert ist
+        String methodKey = "smss";
+        Object lastCommand = lastSetCommands.get(methodKey);
+        lastSetCommands.put(methodKey, neuerStatus);
+        if (lastCommand == neuerStatus)
+            return;
 
-        if (neuerStatus == EMotorbewegungXAchse.AUS) {
-            resetOutputBit(Q_1 | Q_2);
+        synchronized (instance) {
 
-        } else if (neuerStatus == EMotorbewegungXAchse.RECHTS) {
-            resetOutputBit(Q_2);
+            if (neuerStatus == EMotorbewegungXAchse.AUS) {
+                resetOutputBit(Q_1 | Q_2);
 
-            if (getPositionSchieberS() == ESensorXAchse.RECHTS) {
-                close();
-                throw new RuntimeException("Illegale Aktion: set Q_1 wenn I_03 aktiv");
-            } else
-                setOutputBit(Q_1);
+            } else if (neuerStatus == EMotorbewegungXAchse.RECHTS) {
+                resetOutputBit(Q_2);
 
-        } else if (neuerStatus == EMotorbewegungXAchse.LINKS) {
-            resetOutputBit(Q_1);
+                if (getPositionSchieberS() == ESensorXAchse.RECHTS) {
+                    close();
+                    throw new RuntimeException("Illegale Aktion: set Q_1 wenn I_03 aktiv");
+                } else
+                    setOutputBit(Q_1);
 
-            if (getPositionSchieberS() == ESensorXAchse.LINKS) {
-                close();
-                throw new RuntimeException("Illegale Aktion: set Q_2 wenn I_02 aktiv");
-            } else
-                setOutputBit(Q_2);
+            } else if (neuerStatus == EMotorbewegungXAchse.LINKS) {
+                resetOutputBit(Q_1);
+
+                if (getPositionSchieberS() == ESensorXAchse.LINKS) {
+                    close();
+                    throw new RuntimeException("Illegale Aktion: set Q_2 wenn I_02 aktiv");
+                } else
+                    setOutputBit(Q_2);
+
+            }
+            write();
 
         }
-        write();
     }
 
     @Override
@@ -402,35 +418,45 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
     //*  IKran
     //************************
     @Override
-    public synchronized void setMotorstatusXAchseK(EMotorbewegungXAchse neuerStatus) {
+    public void setMotorstatusXAchseK(EMotorbewegungXAchse neuerStatus) {
         if (!schnittstelleOffen)
             throw new RuntimeException("Interface nicht geoeffnet. Benutze 'open()'.");
 
         throwErrorIfNull(neuerStatus);
 
-        if (neuerStatus == EMotorbewegungXAchse.AUS) {
-            resetOutputBit(Q_18 | Q_19);
+        String methodKey = "smxak";
+        Object lastCommand = lastSetCommands.get(methodKey);
+        lastSetCommands.put(methodKey, neuerStatus);
+        if (lastCommand == neuerStatus)
+            return;
 
-        } else if (neuerStatus == EMotorbewegungXAchse.LINKS) {
-            resetOutputBit(Q_18);
+        synchronized (instance) {
 
-            if (getPositionXAchseK() == ESensorXAchse.LINKS) {
-                close();
-                throw new RuntimeException("Illegale Aktion: set Q_19 wenn I_18 aktiv");
-            } else
-                setOutputBit(Q_19);
+            if (neuerStatus == EMotorbewegungXAchse.AUS) {
+                resetOutputBit(Q_18 | Q_19);
 
-        } else if (neuerStatus == EMotorbewegungXAchse.RECHTS) {
-            resetOutputBit(Q_19);
+            } else if (neuerStatus == EMotorbewegungXAchse.LINKS) {
+                resetOutputBit(Q_18);
 
-            if (getPositionXAchseK() == ESensorXAchse.RECHTS) {
-                close();
-                throw new RuntimeException("Illegale Aktion: set Q_18 wenn I_17 aktiv");
-            } else
-                setOutputBit(Q_18);
+                if (getPositionXAchseK() == ESensorXAchse.LINKS) {
+                    close();
+                    throw new RuntimeException("Illegale Aktion: set Q_19 wenn I_18 aktiv");
+                } else
+                    setOutputBit(Q_19);
+
+            } else if (neuerStatus == EMotorbewegungXAchse.RECHTS) {
+                resetOutputBit(Q_19);
+
+                if (getPositionXAchseK() == ESensorXAchse.RECHTS) {
+                    close();
+                    throw new RuntimeException("Illegale Aktion: set Q_18 wenn I_17 aktiv");
+                } else
+                    setOutputBit(Q_18);
+
+            }
+            write();
 
         }
-        write();
     }
 
     @Override
@@ -456,35 +482,45 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
     }
 
     @Override
-    public synchronized void setMotorstatusYAchseK(EMotorbewegungYAchse neuerStatus) {
+    public void setMotorstatusYAchseK(EMotorbewegungYAchse neuerStatus) {
         if (!schnittstelleOffen)
             throw new RuntimeException("Interface nicht geoeffnet. Benutze 'open()'.");
 
         throwErrorIfNull(neuerStatus);
 
-        if (neuerStatus == EMotorbewegungYAchse.AUS) {
-            resetOutputBit(Q_20 | Q_21);
+        String methodKey = "smyak";
+        Object lastCommand = lastSetCommands.get(methodKey);
+        lastSetCommands.put(methodKey, neuerStatus);
+        if (lastCommand == neuerStatus)
+            return;
 
-        } else if (neuerStatus == EMotorbewegungYAchse.VOR) {
-            resetOutputBit(Q_21);
+        synchronized (instance) {
 
-            if (getPositionYAchseK() == ESensorYAchse.VORNE) {
-                close();
-                throw new RuntimeException("Illegale Aktion: set Q_20 wenn I_19 aktiv");
-            } else
-                setOutputBit(Q_20);
+            if (neuerStatus == EMotorbewegungYAchse.AUS) {
+                resetOutputBit(Q_20 | Q_21);
 
-        } else if (neuerStatus == EMotorbewegungYAchse.ZURUECK) {
-            resetOutputBit(Q_20);
+            } else if (neuerStatus == EMotorbewegungYAchse.VOR) {
+                resetOutputBit(Q_21);
 
-            if (getPositionYAchseK() == ESensorYAchse.HINTEN) {
-                close();
-                throw new RuntimeException("Illegale Aktion: set Q_21 wenn I_20 aktiv");
-            } else
-                setOutputBit(Q_21);
+                if (getPositionYAchseK() == ESensorYAchse.VORNE) {
+                    close();
+                    throw new RuntimeException("Illegale Aktion: set Q_20 wenn I_19 aktiv");
+                } else
+                    setOutputBit(Q_20);
+
+            } else if (neuerStatus == EMotorbewegungYAchse.ZURUECK) {
+                resetOutputBit(Q_20);
+
+                if (getPositionYAchseK() == ESensorYAchse.HINTEN) {
+                    close();
+                    throw new RuntimeException("Illegale Aktion: set Q_21 wenn I_20 aktiv");
+                } else
+                    setOutputBit(Q_21);
+
+            }
+            write();
 
         }
-        write();
     }
 
     @Override
@@ -510,35 +546,45 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
     }
 
     @Override
-    public synchronized void setMotorstatusZAchseK(EMotorbewegungZAchse neuerStatus) {
+    public void setMotorstatusZAchseK(EMotorbewegungZAchse neuerStatus) {
         if (!schnittstelleOffen)
             throw new RuntimeException("Interface nicht geoeffnet. Benutze 'open()'.");
 
         throwErrorIfNull(neuerStatus);
 
-        if (neuerStatus == EMotorbewegungZAchse.AUS) {
-            resetOutputBit(Q_22 | Q_23);
+        String methodKey = "smzak";
+        Object lastCommand = lastSetCommands.get(methodKey);
+        lastSetCommands.put(methodKey, neuerStatus);
+        if (lastCommand == neuerStatus)
+            return;
 
-        } else if (neuerStatus == EMotorbewegungZAchse.AUF) {
-            resetOutputBit(Q_23);
+        synchronized (instance) {
 
-            if (getPositionZAchseK() == ESensorZAchse.OBEN) {
-                close();
-                throw new RuntimeException("Illegale Aktion: set Q_22 wenn I_21 aktiv");
-            } else
-                setOutputBit(Q_22);
+            if (neuerStatus == EMotorbewegungZAchse.AUS) {
+                resetOutputBit(Q_22 | Q_23);
 
-        } else if (neuerStatus == EMotorbewegungZAchse.AB) {
-            resetOutputBit(Q_22);
+            } else if (neuerStatus == EMotorbewegungZAchse.AUF) {
+                resetOutputBit(Q_23);
 
-            if (getPositionZAchseK() == ESensorZAchse.UNTEN) {
-                close();
-                throw new RuntimeException("Illegale Aktion: set Q_23 wenn I_22 aktiv");
-            } else
-                setOutputBit(Q_23);
+                if (getPositionZAchseK() == ESensorZAchse.OBEN) {
+                    close();
+                    throw new RuntimeException("Illegale Aktion: set Q_22 wenn I_21 aktiv");
+                } else
+                    setOutputBit(Q_22);
+
+            } else if (neuerStatus == EMotorbewegungZAchse.AB) {
+                resetOutputBit(Q_22);
+
+                if (getPositionZAchseK() == ESensorZAchse.UNTEN) {
+                    close();
+                    throw new RuntimeException("Illegale Aktion: set Q_23 wenn I_22 aktiv");
+                } else
+                    setOutputBit(Q_23);
+
+            }
+            write();
 
         }
-        write();
     }
 
     @Override
@@ -565,20 +611,29 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
     }
 
     @Override
-    public synchronized void setMotorstatusMagnetK(EMotorstatus neuerStatus) {
+    public void setMotorstatusMagnetK(EMotorstatus neuerStatus) {
         if (!schnittstelleOffen)
             throw new RuntimeException("Interface nicht geoeffnet. Benutze 'open()'.");
 
         throwErrorIfNull(neuerStatus);
 
-        if (neuerStatus == EMotorstatus.AUS) {
-            resetOutputBit(Q_24);
+        String methodKey = "smmk";
+        Object lastCommand = lastSetCommands.get(methodKey);
+        lastSetCommands.put(methodKey, neuerStatus);
+        if (lastCommand == neuerStatus)
+            return;
 
-        } else if (neuerStatus == EMotorstatus.AN) {
-            setOutputBit(Q_24);
+        synchronized (instance) {
 
+            if (neuerStatus == EMotorstatus.AUS) {
+                resetOutputBit(Q_24);
+
+            } else if (neuerStatus == EMotorstatus.AN) {
+                setOutputBit(Q_24);
+
+            }
+            write();
         }
-        write();
     }
 
     @Override
@@ -634,35 +689,45 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
     //*  IMBohrmaschine
     //************************
     @Override
-    public synchronized void setMotorstatusHubB(EMotorbewegungZAchse neuerStatus) {
+    public void setMotorstatusHubB(EMotorbewegungZAchse neuerStatus) {
         if (!schnittstelleOffen)
             throw new RuntimeException("Interface nicht geoeffnet. Benutze 'open()'.");
 
         throwErrorIfNull(neuerStatus);
 
-        if (neuerStatus == EMotorbewegungZAchse.AUS) {
-            resetOutputBit(Q_3 | Q_4);
+        String methodKey = "smhb";
+        Object lastCommand = lastSetCommands.get(methodKey);
+        lastSetCommands.put(methodKey, neuerStatus);
+        if (lastCommand == neuerStatus)
+            return;
 
-        } else if (neuerStatus == EMotorbewegungZAchse.AUF) {
-            resetOutputBit(Q_4);
+        synchronized (instance) {
 
-            if (getPositionHubB() == ESensorZAchse.OBEN) {
-                close();
-                throw new RuntimeException("Illegale Aktion: set Q_3 wenn I_04 aktiv");
-            } else
-                setOutputBit(Q_3);
+            if (neuerStatus == EMotorbewegungZAchse.AUS) {
+                resetOutputBit(Q_3 | Q_4);
 
-        } else if (neuerStatus == EMotorbewegungZAchse.AB) {
-            resetOutputBit(Q_3);
+            } else if (neuerStatus == EMotorbewegungZAchse.AUF) {
+                resetOutputBit(Q_4);
 
-            if (getPositionHubB() == ESensorZAchse.UNTEN) {
-                close();
-                throw new RuntimeException("Illegale Aktion: set Q_4 wenn I_05 aktiv");
-            } else
-                setOutputBit(Q_4);
+                if (getPositionHubB() == ESensorZAchse.OBEN) {
+                    close();
+                    throw new RuntimeException("Illegale Aktion: set Q_3 wenn I_04 aktiv");
+                } else
+                    setOutputBit(Q_3);
+
+            } else if (neuerStatus == EMotorbewegungZAchse.AB) {
+                resetOutputBit(Q_3);
+
+                if (getPositionHubB() == ESensorZAchse.UNTEN) {
+                    close();
+                    throw new RuntimeException("Illegale Aktion: set Q_4 wenn I_05 aktiv");
+                } else
+                    setOutputBit(Q_4);
+
+            }
+            write();
 
         }
-        write();
     }
 
     @Override
@@ -688,11 +753,19 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
     }
 
     @Override
-    public synchronized void setMotorstatusWerkzeugAntriebB(EMotorstatus neuerStatus) {
+    public void setMotorstatusWerkzeugAntriebB(EMotorstatus neuerStatus) {
         if (!schnittstelleOffen)
             throw new RuntimeException("Interface nicht geoeffnet. Benutze 'open()'.");
 
         throwErrorIfNull(neuerStatus);
+
+        String methodKey = "smwab";
+        Object lastCommand = lastSetCommands.get(methodKey);
+        lastSetCommands.put(methodKey, neuerStatus);
+        if (lastCommand == neuerStatus)
+            return;
+
+        synchronized (instance) {
 
         if (neuerStatus == EMotorstatus.AUS) {
             resetOutputBit(Q_5);
@@ -702,23 +775,35 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
 
         }
         write();
+
+        }
     }
 
     @Override
-    public synchronized void setMotorstatusBandB(EMotorstatus neuerStatus) {
+    public void setMotorstatusBandB(EMotorstatus neuerStatus) {
         if (!schnittstelleOffen)
             throw new RuntimeException("Interface nicht geoeffnet. Benutze 'open()'.");
 
         throwErrorIfNull(neuerStatus);
 
-        if (neuerStatus == EMotorstatus.AUS) {
-            resetOutputBit(Q_15);
+        String methodKey = "smbb";
+        Object lastCommand = lastSetCommands.get(methodKey);
+        lastSetCommands.put(methodKey, neuerStatus);
+        if (lastCommand == neuerStatus)
+            return;
 
-        } else if (neuerStatus == EMotorstatus.AN) {
-            setOutputBit(Q_15);
+        synchronized (instance) {
+
+            if (neuerStatus == EMotorstatus.AUS) {
+                resetOutputBit(Q_15);
+
+            } else if (neuerStatus == EMotorstatus.AN) {
+                setOutputBit(Q_15);
+
+            }
+            write();
 
         }
-        write();
     }
 
     @Override
@@ -767,35 +852,45 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
     //************************
 
     @Override
-    public synchronized void setMotorstatusHubM(EMotorbewegungZAchse neuerStatus) {
+    public void setMotorstatusHubM(EMotorbewegungZAchse neuerStatus) {
         if (!schnittstelleOffen)
             throw new RuntimeException("Interface nicht geoeffnet. Benutze 'open()'.");
 
         throwErrorIfNull(neuerStatus);
 
-        if (neuerStatus == EMotorbewegungZAchse.AUS) {
-            resetOutputBit(Q_6 | Q_7);
+        String methodKey = "smhm";
+        Object lastCommand = lastSetCommands.get(methodKey);
+        lastSetCommands.put(methodKey, neuerStatus);
+        if (lastCommand == neuerStatus)
+            return;
 
-        } else if (neuerStatus == EMotorbewegungZAchse.AUF) {
-            resetOutputBit(Q_7);
+        synchronized (instance) {
 
-            if (getPositionHubM() == ESensorZAchse.OBEN) {
-                close();
-                throw new RuntimeException("Illegale Aktion: set Q_6 wenn I_06 aktiv");
-            } else
-                setOutputBit(Q_6);
+            if (neuerStatus == EMotorbewegungZAchse.AUS) {
+                resetOutputBit(Q_6 | Q_7);
 
-        } else if (neuerStatus == EMotorbewegungZAchse.AB) {
-            resetOutputBit(Q_6);
+            } else if (neuerStatus == EMotorbewegungZAchse.AUF) {
+                resetOutputBit(Q_7);
 
-            if (getPositionHubM() == ESensorZAchse.UNTEN) {
-                close();
-                throw new RuntimeException("Illegale Aktion: set Q_7 wenn I_07 aktiv");
-            } else
-                setOutputBit(Q_7);
+                if (getPositionHubM() == ESensorZAchse.OBEN) {
+                    close();
+                    throw new RuntimeException("Illegale Aktion: set Q_6 wenn I_06 aktiv");
+                } else
+                    setOutputBit(Q_6);
+
+            } else if (neuerStatus == EMotorbewegungZAchse.AB) {
+                resetOutputBit(Q_6);
+
+                if (getPositionHubM() == ESensorZAchse.UNTEN) {
+                    close();
+                    throw new RuntimeException("Illegale Aktion: set Q_7 wenn I_07 aktiv");
+                } else
+                    setOutputBit(Q_7);
+
+            }
+            write();
 
         }
-        write();
     }
 
     @Override
@@ -821,54 +916,84 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
     }
 
     @Override
-    public synchronized void setMotorstatusRevolverdrehungM(EMotorstatus neuerStatus) {
+    public void setMotorstatusRevolverdrehungM(EMotorstatus neuerStatus) {
         if (!schnittstelleOffen)
             throw new RuntimeException("Interface nicht geoeffnet. Benutze 'open()'.");
 
         throwErrorIfNull(neuerStatus);
 
-        if (neuerStatus == EMotorstatus.AUS) {
-            resetOutputBit(Q_8);
+        String methodKey = "smrm";
+        Object lastCommand = lastSetCommands.get(methodKey);
+        lastSetCommands.put(methodKey, neuerStatus);
+        if (lastCommand == neuerStatus)
+            return;
 
-        } else if (neuerStatus == EMotorstatus.AN) {
-            setOutputBit(Q_8);
+        synchronized (instance) {
+
+            if (neuerStatus == EMotorstatus.AUS) {
+                resetOutputBit(Q_8);
+
+            } else if (neuerStatus == EMotorstatus.AN) {
+                setOutputBit(Q_8);
+
+            }
+            write();
 
         }
-        write();
     }
 
     @Override
-    public synchronized void setMotorstatusWerkzeugAntriebM(EMotorstatus neuerStatus) {
+    public void setMotorstatusWerkzeugAntriebM(EMotorstatus neuerStatus) {
         if (!schnittstelleOffen)
             throw new RuntimeException("Interface nicht geoeffnet. Benutze 'open()'.");
 
         throwErrorIfNull(neuerStatus);
 
-        if (neuerStatus == EMotorstatus.AUS) {
-            resetOutputBit(Q_9);
+        String methodKey = "smwam";
+        Object lastCommand = lastSetCommands.get(methodKey);
+        lastSetCommands.put(methodKey, neuerStatus);
+        if (lastCommand == neuerStatus)
+            return;
 
-        } else if (neuerStatus == EMotorstatus.AN) {
-            setOutputBit(Q_9);
+        synchronized (instance) {
+
+            if (neuerStatus == EMotorstatus.AUS) {
+                resetOutputBit(Q_9);
+
+            } else if (neuerStatus == EMotorstatus.AN) {
+                setOutputBit(Q_9);
+
+            }
+            write();
 
         }
-        write();
     }
 
     @Override
-    public synchronized void setMotorstatusBandM(EMotorstatus neuerStatus) {
+    public void setMotorstatusBandM(EMotorstatus neuerStatus) {
         if (!schnittstelleOffen)
             throw new RuntimeException("Interface nicht geoeffnet. Benutze 'open()'.");
 
         throwErrorIfNull(neuerStatus);
 
-        if (neuerStatus == EMotorstatus.AUS) {
-            resetOutputBit(Q_16);
+        String methodKey = "smbm";
+        Object lastCommand = lastSetCommands.get(methodKey);
+        lastSetCommands.put(methodKey, neuerStatus);
+        if (lastCommand == neuerStatus)
+            return;
 
-        } else if (neuerStatus == EMotorstatus.AN) {
-            setOutputBit(Q_16);
+        synchronized (instance) {
+
+            if (neuerStatus == EMotorstatus.AUS) {
+                resetOutputBit(Q_16);
+
+            } else if (neuerStatus == EMotorstatus.AN) {
+                setOutputBit(Q_16);
+
+            }
+            write();
 
         }
-        write();
     }
 
     @Override
@@ -916,35 +1041,45 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
     //*  IMFraesmaschine
     //************************
     @Override
-    public synchronized void setMotorstatusHubF(EMotorbewegungZAchse neuerStatus) {
+    public void setMotorstatusHubF(EMotorbewegungZAchse neuerStatus) {
         if (!schnittstelleOffen)
             throw new RuntimeException("Interface nicht geoeffnet. Benutze 'open()'.");
 
         throwErrorIfNull(neuerStatus);
 
-        if (neuerStatus == EMotorbewegungZAchse.AUS) {
-            resetOutputBit(Q_10 | Q_11);
+        String methodKey = "smhf";
+        Object lastCommand = lastSetCommands.get(methodKey);
+        lastSetCommands.put(methodKey, neuerStatus);
+        if (lastCommand == neuerStatus)
+            return;
 
-        } else if (neuerStatus == EMotorbewegungZAchse.AUF) {
-            resetOutputBit(Q_11);
+        synchronized (instance) {
 
-            if (getPositionHubF() == ESensorZAchse.OBEN) {
-                close();
-                throw new RuntimeException("Illegale Aktion: set Q_10 wenn I_09 aktiv");
-            } else
-                setOutputBit(Q_10);
+            if (neuerStatus == EMotorbewegungZAchse.AUS) {
+                resetOutputBit(Q_10 | Q_11);
 
-        } else if (neuerStatus == EMotorbewegungZAchse.AB) {
-            resetOutputBit(Q_10);
+            } else if (neuerStatus == EMotorbewegungZAchse.AUF) {
+                resetOutputBit(Q_11);
 
-            if (getPositionHubF() == ESensorZAchse.UNTEN) {
-                close();
-                throw new RuntimeException("Illegale Aktion: set Q_11 wenn I_10 aktiv");
-            } else
-                setOutputBit(Q_11);
+                if (getPositionHubF() == ESensorZAchse.OBEN) {
+                    close();
+                    throw new RuntimeException("Illegale Aktion: set Q_10 wenn I_09 aktiv");
+                } else
+                    setOutputBit(Q_10);
+
+            } else if (neuerStatus == EMotorbewegungZAchse.AB) {
+                resetOutputBit(Q_10);
+
+                if (getPositionHubF() == ESensorZAchse.UNTEN) {
+                    close();
+                    throw new RuntimeException("Illegale Aktion: set Q_11 wenn I_10 aktiv");
+                } else
+                    setOutputBit(Q_11);
+
+            }
+            write();
 
         }
-        write();
     }
 
     @Override
@@ -970,35 +1105,45 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
     }
 
     @Override
-    public synchronized void setMotorstatusQuerschlittenF(EMotorbewegungYAchse neuerStatus) {
+    public void setMotorstatusQuerschlittenF(EMotorbewegungYAchse neuerStatus) {
         if (!schnittstelleOffen)
             throw new RuntimeException("Interface nicht geoeffnet. Benutze 'open()'.");
 
         throwErrorIfNull(neuerStatus);
 
-        if (neuerStatus == EMotorbewegungYAchse.AUS) {
-            resetOutputBit(Q_12 | Q_13);
+        String methodKey = "smqf";
+        Object lastCommand = lastSetCommands.get(methodKey);
+        lastSetCommands.put(methodKey, neuerStatus);
+        if (lastCommand == neuerStatus)
+            return;
 
-        } else if (neuerStatus == EMotorbewegungYAchse.VOR) {
-            resetOutputBit(Q_12);
+        synchronized (instance) {
 
-            if (getPositionQuerschlittenF() == ESensorYAchse.VORNE) {
-                close();
-                throw new RuntimeException("Illegale Aktion: set Q_13 wenn I_11 aktiv");
-            } else
-                setOutputBit(Q_13);
+            if (neuerStatus == EMotorbewegungYAchse.AUS) {
+                resetOutputBit(Q_12 | Q_13);
 
-        } else if (neuerStatus == EMotorbewegungYAchse.ZURUECK) {
-            resetOutputBit(Q_13);
+            } else if (neuerStatus == EMotorbewegungYAchse.VOR) {
+                resetOutputBit(Q_12);
 
-            if (getPositionQuerschlittenF() == ESensorYAchse.HINTEN) {
-                close();
-                throw new RuntimeException("Illegale Aktion: set Q_12 wenn I_12 aktiv");
-            } else
-                setOutputBit(Q_12);
+                if (getPositionQuerschlittenF() == ESensorYAchse.VORNE) {
+                    close();
+                    throw new RuntimeException("Illegale Aktion: set Q_13 wenn I_11 aktiv");
+                } else
+                    setOutputBit(Q_13);
+
+            } else if (neuerStatus == EMotorbewegungYAchse.ZURUECK) {
+                resetOutputBit(Q_13);
+
+                if (getPositionQuerschlittenF() == ESensorYAchse.HINTEN) {
+                    close();
+                    throw new RuntimeException("Illegale Aktion: set Q_12 wenn I_12 aktiv");
+                } else
+                    setOutputBit(Q_12);
+
+            }
+            write();
 
         }
-        write();
     }
 
 
@@ -1025,34 +1170,57 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
     }
 
     @Override
-    public synchronized void setMotorstatusWerkzeugAntriebF(EMotorstatus neuerStatus) {
+    public void setMotorstatusWerkzeugAntriebF(EMotorstatus neuerStatus) {
         if (!schnittstelleOffen)
             throw new RuntimeException("Interface nicht geoeffnet. Benutze 'open()'.");
 
         throwErrorIfNull(neuerStatus);
 
-        if (neuerStatus == EMotorstatus.AN) {
-            setOutputBit(Q_14);
+        String methodKey = "smwaf";
+        Object lastCommand = lastSetCommands.get(methodKey);
+        lastSetCommands.put(methodKey, neuerStatus);
+        if (lastCommand == neuerStatus)
+            return;
 
-        } else if (neuerStatus == EMotorstatus.AUS) {
-            resetOutputBit(Q_14);
+        synchronized (instance) {
+
+            if (neuerStatus == EMotorstatus.AN) {
+                setOutputBit(Q_14);
+
+            } else if (neuerStatus == EMotorstatus.AUS) {
+                resetOutputBit(Q_14);
+
+            }
+            write();
 
         }
-        write();
     }
 
     @Override
-    public synchronized void setMotorstatusBandF(EMotorstatus neuerStatus) {
+    public void setMotorstatusBandF(EMotorstatus neuerStatus) {
         if (!schnittstelleOffen)
             throw new RuntimeException("Interface nicht geoeffnet. Benutze 'open()'.");
 
         throwErrorIfNull(neuerStatus);
 
-        if (neuerStatus == EMotorstatus.AN)
-            setOutputBit(Q_17);
-        else if (neuerStatus == EMotorstatus.AUS)
-            resetOutputBit(Q_17);
-        write();
+        String methodKey = "smbf";
+        Object lastCommand = lastSetCommands.get(methodKey);
+        lastSetCommands.put(methodKey, neuerStatus);
+        if (lastCommand == neuerStatus)
+            return;
+
+        synchronized (instance) {
+
+            if (neuerStatus == EMotorstatus.AN) {
+                setOutputBit(Q_17);
+
+            } else if (neuerStatus == EMotorstatus.AUS) {
+                resetOutputBit(Q_17);
+
+            }
+            write();
+
+        }
     }
 
     @Override
