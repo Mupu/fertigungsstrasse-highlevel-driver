@@ -70,7 +70,7 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
     private boolean flagWillWerkstueckAbgebenM = false;
 
     /**
-     * Beinhaltet den zuletzt empfangenen setCommand von jeder set Methode die einen Motor antreibt.
+     * Beinhaltet das zuletzt empfangene setCommand von jeder set Methode die einen Motor antreibt.
      * Wird benoetigt damit Threads die set Methoden in einer While-True Schleife benutzen koennen,
      * ohne die anderen zu blockieren. (synchronized)
      */
@@ -344,8 +344,7 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
         throwErrorIfNull(neuerStatus);
 
         String methodKey = "smss";
-        Object lastCommand = lastSetCommands.get(methodKey);
-        lastSetCommands.put(methodKey, neuerStatus);
+        Object lastCommand = lastSetCommands.put(methodKey, neuerStatus);
         if (lastCommand == neuerStatus)
             return;
 
@@ -443,8 +442,7 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
         throwErrorIfNull(neuerStatus);
 
         String methodKey = "smxak";
-        Object lastCommand = lastSetCommands.get(methodKey);
-        lastSetCommands.put(methodKey, neuerStatus);
+        Object lastCommand = lastSetCommands.put(methodKey, neuerStatus);
         if (lastCommand == neuerStatus)
             return;
 
@@ -507,8 +505,7 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
         throwErrorIfNull(neuerStatus);
 
         String methodKey = "smyak";
-        Object lastCommand = lastSetCommands.get(methodKey);
-        lastSetCommands.put(methodKey, neuerStatus);
+        Object lastCommand = lastSetCommands.put(methodKey, neuerStatus);
         if (lastCommand == neuerStatus)
             return;
 
@@ -571,8 +568,7 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
         throwErrorIfNull(neuerStatus);
 
         String methodKey = "smzak";
-        Object lastCommand = lastSetCommands.get(methodKey);
-        lastSetCommands.put(methodKey, neuerStatus);
+        Object lastCommand = lastSetCommands.put(methodKey, neuerStatus);
         if (lastCommand == neuerStatus)
             return;
 
@@ -636,8 +632,7 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
         throwErrorIfNull(neuerStatus);
 
         String methodKey = "smmk";
-        Object lastCommand = lastSetCommands.get(methodKey);
-        lastSetCommands.put(methodKey, neuerStatus);
+        Object lastCommand = lastSetCommands.put(methodKey, neuerStatus);
         if (lastCommand == neuerStatus)
             return;
 
@@ -704,8 +699,7 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
         throwErrorIfNull(neuerStatus);
 
         String methodKey = "smhb";
-        Object lastCommand = lastSetCommands.get(methodKey);
-        lastSetCommands.put(methodKey, neuerStatus);
+        Object lastCommand = lastSetCommands.put(methodKey, neuerStatus);
         if (lastCommand == neuerStatus)
             return;
 
@@ -768,8 +762,7 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
         throwErrorIfNull(neuerStatus);
 
         String methodKey = "smwab";
-        Object lastCommand = lastSetCommands.get(methodKey);
-        lastSetCommands.put(methodKey, neuerStatus);
+        Object lastCommand = lastSetCommands.put(methodKey, neuerStatus);
         if (lastCommand == neuerStatus)
             return;
 
@@ -784,8 +777,7 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
         throwErrorIfNull(neuerStatus);
 
         String methodKey = "smbb";
-        Object lastCommand = lastSetCommands.get(methodKey);
-        lastSetCommands.put(methodKey, neuerStatus);
+        Object lastCommand = lastSetCommands.put(methodKey, neuerStatus);
         if (lastCommand == neuerStatus)
             return;
 
@@ -845,8 +837,7 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
         throwErrorIfNull(neuerStatus);
 
         String methodKey = "smhm";
-        Object lastCommand = lastSetCommands.get(methodKey);
-        lastSetCommands.put(methodKey, neuerStatus);
+        Object lastCommand = lastSetCommands.put(methodKey, neuerStatus);
         if (lastCommand == neuerStatus)
             return;
 
@@ -909,8 +900,7 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
         throwErrorIfNull(neuerStatus);
 
         String methodKey = "smrm";
-        Object lastCommand = lastSetCommands.get(methodKey);
-        lastSetCommands.put(methodKey, neuerStatus);
+        Object lastCommand = lastSetCommands.put(methodKey, neuerStatus);
         if (lastCommand == neuerStatus)
             return;
 
@@ -925,8 +915,7 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
         throwErrorIfNull(neuerStatus);
 
         String methodKey = "smwam";
-        Object lastCommand = lastSetCommands.get(methodKey);
-        lastSetCommands.put(methodKey, neuerStatus);
+        Object lastCommand = lastSetCommands.put(methodKey, neuerStatus);
         if (lastCommand == neuerStatus)
             return;
 
@@ -941,8 +930,7 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
         throwErrorIfNull(neuerStatus);
 
         String methodKey = "smbm";
-        Object lastCommand = lastSetCommands.get(methodKey);
-        lastSetCommands.put(methodKey, neuerStatus);
+        Object lastCommand = lastSetCommands.put(methodKey, neuerStatus);
         if (lastCommand == neuerStatus)
             return;
 
@@ -1001,8 +989,7 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
         throwErrorIfNull(neuerStatus);
 
         String methodKey = "smhf";
-        Object lastCommand = lastSetCommands.get(methodKey);
-        lastSetCommands.put(methodKey, neuerStatus);
+        Object lastCommand = lastSetCommands.put(methodKey, neuerStatus);
         if (lastCommand == neuerStatus)
             return;
 
@@ -1065,8 +1052,7 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
         throwErrorIfNull(neuerStatus);
 
         String methodKey = "smqf";
-        Object lastCommand = lastSetCommands.get(methodKey);
-        lastSetCommands.put(methodKey, neuerStatus);
+        Object lastCommand = lastSetCommands.put(methodKey, neuerStatus);
         if (lastCommand == neuerStatus)
             return;
 
@@ -1130,8 +1116,7 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
         throwErrorIfNull(neuerStatus);
 
         String methodKey = "smwaf";
-        Object lastCommand = lastSetCommands.get(methodKey);
-        lastSetCommands.put(methodKey, neuerStatus);
+        Object lastCommand = lastSetCommands.put(methodKey, neuerStatus);
         if (lastCommand == neuerStatus)
             return;
 
@@ -1146,8 +1131,7 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
         throwErrorIfNull(neuerStatus);
 
         String methodKey = "smbf";
-        Object lastCommand = lastSetCommands.get(methodKey);
-        lastSetCommands.put(methodKey, neuerStatus);
+        Object lastCommand = lastSetCommands.put(methodKey, neuerStatus);
         if (lastCommand == neuerStatus)
             return;
 
