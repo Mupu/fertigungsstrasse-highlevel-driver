@@ -412,7 +412,7 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
         if (!schnittstelleOffen)
             throw new RuntimeException("Interface nicht geoeffnet. Benutze 'open()'.");
 
-        return (input & I_13) == 0 ? ESensorstatus.SIGNAL : ESensorstatus.KEIN_SIGNAL;
+        return (input & I_13) == 0 ? ESensorstatus.KEIN_SIGNAL : ESensorstatus.SIGNAL;
     }
 
     @Override
@@ -660,7 +660,7 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
         if (!schnittstelleOffen)
             throw new RuntimeException("Interface nicht geoeffnet. Benutze 'open()'.");
 
-        return (input & I_14) == 0 ? ESensorstatus.SIGNAL : ESensorstatus.KEIN_SIGNAL;
+        return (input & I_14) == 0 ? ESensorstatus.KEIN_SIGNAL : ESensorstatus.SIGNAL;
     }
 
     @Override
@@ -813,7 +813,7 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
         if (!schnittstelleOffen)
             throw new RuntimeException("Interface nicht geoeffnet. Benutze 'open()'.");
 
-        return (input & I_13) == 0 ? ESensorstatus.SIGNAL : ESensorstatus.KEIN_SIGNAL;
+        return (input & I_13) == 0 ? ESensorstatus.KEIN_SIGNAL : ESensorstatus.SIGNAL;
     }
 
     @Override
@@ -1143,7 +1143,7 @@ public class FertigungsstrasseHLD implements IKran, IMMehrspindelmaschine, IMBoh
         if (!schnittstelleOffen)
             throw new RuntimeException("Interface nicht geoeffnet. Benutze 'open()'.");
 
-        return (input & I_14) == 0 ? ESensorstatus.SIGNAL : ESensorstatus.KEIN_SIGNAL;
+        return (input & I_14) == 0 ? ESensorstatus.KEIN_SIGNAL : ESensorstatus.SIGNAL;
     }
 
     @Override
